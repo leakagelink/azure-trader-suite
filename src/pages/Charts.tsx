@@ -6,6 +6,8 @@ import {
   Maximize2,
   Minimize2,
   MousePointer2,
+  MousePointerClick,
+  Magnet,
   Minus,
   AlignHorizontalDistributeCenter,
   AlignVerticalJustifyCenter,
