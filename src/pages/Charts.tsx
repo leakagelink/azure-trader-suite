@@ -25,6 +25,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isForexSymbol, isCommoditySymbol } from "@/lib/marketSymbols";
 import TradingChart, { type Candle } from "@/components/charts/TradingChart";
 import { useChartDrawings, type DrawingMode } from "@/hooks/useChartDrawings";
+import { useChartIndicators } from "@/hooks/useChartIndicators";
+import IndicatorsMenu from "@/components/charts/IndicatorsMenu";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 
