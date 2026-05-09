@@ -261,7 +261,37 @@ export default function Charts() {
             )}
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setChartTypeOpen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card/60 px-3 py-1.5 text-xs font-semibold hover:bg-muted/40"
+                title="Chart type"
+              >
+                <CandlestickChart className="h-3.5 w-3.5" />
+                {CHART_TYPES.find((t) => t.value === chartType)?.label}
+                <ChevronDown className="h-3 w-3 opacity-60" />
+              </button>
+              {chartTypeOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setChartTypeOpen(false)} />
+                  <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-xl border border-border/60 bg-popover p-1 shadow-2xl">
+                    {CHART_TYPES.map((t) => (
+                      <button
+                        key={t.value}
+                        onClick={() => { setChartType(t.value); setChartTypeOpen(false); }}
+                        className={`block w-full rounded-md px-3 py-1.5 text-left text-xs hover:bg-muted/50 ${
+                          chartType === t.value ? "bg-muted/40 font-semibold text-primary" : ""
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
             <IndicatorsMenu indicators={indicators} setIndicators={setIndicators} />
+            <AlertsMenu symbol={symbol} currentPrice={lastPrice} alerts={alerts} setAlerts={setAlerts} />
             <button
               onClick={() => setFullscreen(true)}
               className="rounded-md p-2 hover:bg-muted/40"
