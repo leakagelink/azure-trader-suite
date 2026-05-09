@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,33 +22,50 @@ const LISTINGS_CACHE_DURATION_MS = 60000;
 const QUOTES_CACHE_DURATION_MS = 3000;
 const cacheStore = new Map<string, { data: { cryptoData: CryptoItem[] }; timestamp: number }>();
 
-const STATIC_FALLBACK_DATA = {
-  cryptoData: [
-    { name: "Bitcoin", symbol: "BTC", price: "95000.00", change: "+2.50%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png", currencySymbol: "$", high24h: "96000.00", low24h: "93000.00", id: 1 },
-    { name: "Ethereum", symbol: "ETH", price: "3200.00", change: "+3.20%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png", currencySymbol: "$", high24h: "3300.00", low24h: "3100.00", id: 1027 },
-    { name: "Tether USDt", symbol: "USDT", price: "1.00", change: "+0.01%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png", currencySymbol: "$", high24h: "1.00", low24h: "1.00", id: 825 },
-    { name: "XRP", symbol: "XRP", price: "2.30", change: "+5.00%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/52.png", currencySymbol: "$", high24h: "2.40", low24h: "2.20", id: 52 },
-    { name: "BNB", symbol: "BNB", price: "650.00", change: "+1.80%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png", currencySymbol: "$", high24h: "660.00", low24h: "640.00", id: 1839 },
-    { name: "Solana", symbol: "SOL", price: "180.00", change: "+4.50%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png", currencySymbol: "$", high24h: "185.00", low24h: "175.00", id: 5426 },
-    { name: "USDC", symbol: "USDC", price: "1.00", change: "0.00%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png", currencySymbol: "$", high24h: "1.00", low24h: "1.00", id: 3408 },
-    { name: "Dogecoin", symbol: "DOGE", price: "0.15", change: "+8.00%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/74.png", currencySymbol: "$", high24h: "0.16", low24h: "0.14", id: 74 },
-    { name: "Cardano", symbol: "ADA", price: "0.50", change: "+6.00%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png", currencySymbol: "$", high24h: "0.52", low24h: "0.48", id: 2010 },
-    { name: "Chainlink", symbol: "LINK", price: "15.00", change: "+4.00%", isPositive: true, logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/1975.png", currencySymbol: "$", high24h: "15.50", low24h: "14.50", id: 1975 },
-  ]
+// Symbol -> {name, cmcId for logo}
+const SYMBOL_META: Record<string, { name: string; id: number }> = {
+  BTC: { name: 'Bitcoin', id: 1 },
+  ETH: { name: 'Ethereum', id: 1027 },
+  USDT: { name: 'Tether USDt', id: 825 },
+  XRP: { name: 'XRP', id: 52 },
+  BNB: { name: 'BNB', id: 1839 },
+  SOL: { name: 'Solana', id: 5426 },
+  USDC: { name: 'USDC', id: 3408 },
+  DOGE: { name: 'Dogecoin', id: 74 },
+  ADA: { name: 'Cardano', id: 2010 },
+  TRX: { name: 'TRON', id: 1958 },
+  LINK: { name: 'Chainlink', id: 1975 },
+  AVAX: { name: 'Avalanche', id: 5805 },
+  MATIC: { name: 'Polygon', id: 3890 },
+  DOT: { name: 'Polkadot', id: 6636 },
+  LTC: { name: 'Litecoin', id: 2 },
+  BCH: { name: 'Bitcoin Cash', id: 1831 },
+  SHIB: { name: 'Shiba Inu', id: 5994 },
+  NEAR: { name: 'NEAR Protocol', id: 6535 },
+  UNI: { name: 'Uniswap', id: 7083 },
+  ATOM: { name: 'Cosmos', id: 3794 },
+  XLM: { name: 'Stellar', id: 512 },
+  ETC: { name: 'Ethereum Classic', id: 1321 },
+  FIL: { name: 'Filecoin', id: 2280 },
+  APT: { name: 'Aptos', id: 21794 },
+  ARB: { name: 'Arbitrum', id: 11841 },
+  OP: { name: 'Optimism', id: 11840 },
+  PEPE: { name: 'Pepe', id: 24478 },
+  SUI: { name: 'Sui', id: 20947 },
+  TON: { name: 'Toncoin', id: 11419 },
+  ICP: { name: 'Internet Computer', id: 8916 },
 };
 
-const rateLimitedKeys: Map<string, number> = new Map();
-const RATE_LIMIT_COOLDOWN_MS = 60000;
+const TOP_SYMBOLS = ['BTC','ETH','USDT','XRP','BNB','SOL','USDC','DOGE','ADA','TRX','LINK','AVAX','DOT','LTC','BCH','SHIB','NEAR','UNI','ATOM','XLM'];
+
+function fmt(n: number): string {
+  if (!isFinite(n)) return '0';
+  return n.toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+}
 
 function normalizeRequestedSymbols(symbols: unknown): string[] {
   if (!Array.isArray(symbols)) return [];
-  return Array.from(
-    new Set(
-      symbols
-        .map((value) => String(value || '').trim().toUpperCase())
-        .filter(Boolean)
-    )
-  );
+  return Array.from(new Set(symbols.map((v) => String(v || '').trim().toUpperCase()).filter(Boolean)));
 }
 
 function getCacheKey(symbols: string[]) {
@@ -67,172 +83,60 @@ function setCachedPayload(cacheKey: string, data: { cryptoData: CryptoItem[] }) 
   cacheStore.set(cacheKey, { data, timestamp: Date.now() });
 }
 
-function transformCoinMarketCapCoin(coin: any): CryptoItem {
-  const quote = coin?.quote?.USD;
-  const currentPrice = Number(quote?.price || 0);
-  const percentChange24h = Number(quote?.percent_change_24h || 0);
-  const high24h = Number(quote?.high_24h || 0);
-  const low24h = Number(quote?.low_24h || 0);
+function transformBinanceTicker(ticker: any): CryptoItem | null {
+  const rawSymbol = String(ticker?.symbol || '');
+  if (!rawSymbol.endsWith('USDT')) return null;
+  const symbol = rawSymbol.slice(0, -4);
+  const meta = SYMBOL_META[symbol] || { name: symbol, id: 0 };
+  const price = Number(ticker?.lastPrice || 0);
+  const change = Number(ticker?.priceChangePercent || 0);
+  const high = Number(ticker?.highPrice || 0);
+  const low = Number(ticker?.lowPrice || 0);
 
   return {
-    name: coin?.name || coin?.symbol || 'Unknown',
-    symbol: String(coin?.symbol || '').toUpperCase(),
-    price: currentPrice.toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'),
-    change: `${percentChange24h >= 0 ? '+' : ''}${percentChange24h.toFixed(2)}%`,
-    isPositive: percentChange24h >= 0,
-    logo: coin?.id ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.id}.png` : '',
+    name: meta.name,
+    symbol,
+    price: fmt(price),
+    change: `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`,
+    isPositive: change >= 0,
+    logo: meta.id ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${meta.id}.png` : '',
     currencySymbol: '$',
-    high24h: (high24h || currentPrice).toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'),
-    low24h: (low24h || currentPrice).toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'),
-    id: coin?.id || coin?.symbol || crypto.randomUUID(),
+    high24h: fmt(high || price),
+    low24h: fmt(low || price),
+    id: meta.id || symbol,
   };
 }
 
-async function getActiveApiKey(serviceName: string, excludeKeys: string[] = []) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseKey);
+async function fetchBinance(symbols: string[]): Promise<CryptoItem[]> {
+  const apiKey = Deno.env.get('BINANCE_API_KEY');
+  const headers: Record<string, string> = { 'Accept': 'application/json' };
+  if (apiKey) headers['X-MBX-APIKEY'] = apiKey;
 
-  await reEnableExpiredKeys(serviceName);
-
-  const { data: allKeys, error } = await supabase
-    .from('api_keys')
-    .select('api_key, is_active, priority, last_used_at')
-    .eq('service_name', serviceName)
-    .order('priority', { ascending: true });
-
-  if (error || !allKeys || allKeys.length === 0) {
-    return null;
+  let url = 'https://api.binance.com/api/v3/ticker/24hr';
+  if (symbols.length > 0) {
+    const pairs = symbols.map((s) => `"${s}USDT"`).join(',');
+    url += `?symbols=[${encodeURIComponent(pairs).replace(/%2C/g, ',')}]`;
   }
 
-  const now = Date.now();
-  for (const key of allKeys) {
-    if (!key.api_key) continue;
-    if (excludeKeys.includes(key.api_key)) continue;
-
-    const cooldownExpiry = rateLimitedKeys.get(key.api_key);
-    if (cooldownExpiry && now < cooldownExpiry) continue;
-    if (cooldownExpiry) rateLimitedKeys.delete(key.api_key);
-
-    if (key.is_active) {
-      await supabase
-        .from('api_keys')
-        .update({ last_used_at: new Date().toISOString() })
-        .eq('service_name', serviceName)
-        .eq('api_key', key.api_key);
-      return key.api_key;
-    }
-  }
-
-  for (const key of allKeys) {
-    if (!key.api_key) continue;
-    if (excludeKeys.includes(key.api_key)) continue;
-
-    const cooldownExpiry = rateLimitedKeys.get(key.api_key);
-    if (cooldownExpiry && now < cooldownExpiry) continue;
-
-    const { error: updateError } = await supabase
-      .from('api_keys')
-      .update({ is_active: true, last_used_at: new Date().toISOString() })
-      .eq('service_name', serviceName)
-      .eq('api_key', key.api_key);
-
-    if (!updateError) return key.api_key;
-  }
-
-  return null;
-}
-
-async function reEnableExpiredKeys(serviceName: string) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseKey);
-  const now = Date.now();
-
-  const { data: inactiveKeys, error } = await supabase
-    .from('api_keys')
-    .select('api_key, last_used_at')
-    .eq('service_name', serviceName)
-    .eq('is_active', false);
-
-  if (error || !inactiveKeys) return;
-
-  for (const key of inactiveKeys) {
-    const cooldownExpiry = rateLimitedKeys.get(key.api_key);
-    if (!cooldownExpiry || now >= cooldownExpiry) {
-      if (key.last_used_at && new Date(key.last_used_at).getTime() < now - RATE_LIMIT_COOLDOWN_MS) {
-        await supabase
-          .from('api_keys')
-          .update({ is_active: true })
-          .eq('service_name', serviceName)
-          .eq('api_key', key.api_key);
-        rateLimitedKeys.delete(key.api_key);
-      }
-    }
-  }
-}
-
-async function markKeyAsRateLimited(serviceName: string, apiKey: string) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  rateLimitedKeys.set(apiKey, Date.now() + RATE_LIMIT_COOLDOWN_MS);
-
-  await supabase
-    .from('api_keys')
-    .update({ is_active: false, last_used_at: new Date().toISOString() })
-    .eq('service_name', serviceName)
-    .eq('api_key', apiKey);
-}
-
-async function fetchCoinMarketCapListings(apiKey: string) {
-  return await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=20&convert=USD', {
-    headers: {
-      'X-CMC_PRO_API_KEY': apiKey,
-      'Accept': 'application/json',
-    },
-  });
-}
-
-async function fetchCoinMarketCapQuotes(apiKey: string, symbols: string[]) {
-  return await fetch(`https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=${encodeURIComponent(symbols.join(','))}&convert=USD`, {
-    headers: {
-      'X-CMC_PRO_API_KEY': apiKey,
-      'Accept': 'application/json',
-    },
-  });
-}
-
-async function fetchCryptoDataFromCoinGecko(symbols: string[] = []) {
-  const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${symbols.length > 0 ? 250 : 20}&page=1&sparkline=false&price_change_percentage=24h`
-  );
-
+  const response = await fetch(url, { headers });
   if (!response.ok) {
-    throw new Error(`CoinGecko API error: ${response.status}`);
+    throw new Error(`Binance API error: ${response.status} ${await response.text()}`);
   }
 
   const data = await response.json();
-  const requested = new Set(symbols);
-  const filtered = symbols.length > 0
-    ? data.filter((coin: any) => requested.has(String(coin.symbol || '').toUpperCase()))
-    : data;
+  const list = Array.isArray(data) ? data : [data];
 
-  return {
-    cryptoData: filtered.map((coin: any) => ({
-      name: coin.name,
-      symbol: String(coin.symbol || '').toUpperCase(),
-      price: Number(coin.current_price || 0).toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'),
-      change: `${(coin.price_change_percentage_24h || 0) >= 0 ? '+' : ''}${Number(coin.price_change_percentage_24h || 0).toFixed(2)}%`,
-      isPositive: Number(coin.price_change_percentage_24h || 0) >= 0,
-      logo: coin.image,
-      currencySymbol: '$',
-      high24h: Number(coin.high_24h || coin.current_price || 0).toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'),
-      low24h: Number(coin.low_24h || coin.current_price || 0).toFixed(8).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'),
-      id: coin.id,
-    })),
-  };
+  if (symbols.length === 0) {
+    // Filter to top symbols
+    const wanted = new Set(TOP_SYMBOLS.map((s) => `${s}USDT`));
+    return list
+      .filter((t: any) => wanted.has(String(t?.symbol)))
+      .map(transformBinanceTicker)
+      .filter((x): x is CryptoItem => x !== null)
+      .sort((a, b) => TOP_SYMBOLS.indexOf(a.symbol) - TOP_SYMBOLS.indexOf(b.symbol));
+  }
+
+  return list.map(transformBinanceTicker).filter((x): x is CryptoItem => x !== null);
 }
 
 serve(async (req) => {
@@ -243,98 +147,42 @@ serve(async (req) => {
   try {
     let requestBody: any = {};
     if (req.method !== 'GET') {
-      try {
-        requestBody = await req.json();
-      } catch {
-        requestBody = {};
-      }
+      try { requestBody = await req.json(); } catch { requestBody = {}; }
     }
 
     const requestedSymbols = normalizeRequestedSymbols(requestBody?.symbols);
     const cacheKey = getCacheKey(requestedSymbols);
     const cacheTtl = requestedSymbols.length > 0 ? QUOTES_CACHE_DURATION_MS : LISTINGS_CACHE_DURATION_MS;
 
-    const cachedPayload = getCachedPayload(cacheKey, cacheTtl);
-    if (cachedPayload) {
-      return new Response(JSON.stringify(cachedPayload), {
+    const cached = getCachedPayload(cacheKey, cacheTtl);
+    if (cached) {
+      return new Response(JSON.stringify(cached), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
-    }
-
-    let attempts = 0;
-    const maxAttempts = 10;
-    let apiKey: string | null = null;
-    const usedKeys: string[] = [];
-
-    while (attempts < maxAttempts) {
-      attempts++;
-      apiKey = await getActiveApiKey('coinmarketcap', usedKeys);
-
-      if (!apiKey) {
-        apiKey = Deno.env.get('COINMARKETCAP_API_KEY');
-        if (!apiKey) break;
-      } else {
-        usedKeys.push(apiKey);
-      }
-
-      const response = requestedSymbols.length > 0
-        ? await fetchCoinMarketCapQuotes(apiKey, requestedSymbols)
-        : await fetchCoinMarketCapListings(apiKey);
-
-      if (response.ok) {
-        const data = await response.json();
-        const cryptoData = requestedSymbols.length > 0
-          ? requestedSymbols.flatMap((symbol) => {
-              const quoteEntry = data?.data?.[symbol];
-              if (!quoteEntry || !Array.isArray(quoteEntry) || quoteEntry.length === 0) return [];
-              return [transformCoinMarketCapCoin(quoteEntry[0])];
-            })
-          : (data?.data || []).map(transformCoinMarketCapCoin);
-
-        const payload = { cryptoData };
-        setCachedPayload(cacheKey, payload);
-
-        return new Response(JSON.stringify(payload), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        });
-      }
-
-      if (response.status === 429) {
-        if (apiKey) await markKeyAsRateLimited('coinmarketcap', apiKey);
-        continue;
-      }
-
-      break;
     }
 
     try {
-      const coinGeckoData = await fetchCryptoDataFromCoinGecko(requestedSymbols);
-      if (coinGeckoData.cryptoData.length > 0 || requestedSymbols.length === 0) {
-        setCachedPayload(cacheKey, coinGeckoData);
-        return new Response(JSON.stringify(coinGeckoData), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        });
-      }
-    } catch (error) {
-      console.error('CoinGecko fallback failed:', error);
+      const cryptoData = await fetchBinance(requestedSymbols);
+      const payload = { cryptoData };
+      setCachedPayload(cacheKey, payload);
+      return new Response(JSON.stringify(payload), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    } catch (err) {
+      console.error('Binance fetch failed:', err);
     }
 
-    const staleCache = cacheStore.get(cacheKey)?.data;
-    if (staleCache) {
-      return new Response(JSON.stringify(staleCache), {
+    const stale = cacheStore.get(cacheKey)?.data;
+    if (stale) {
+      return new Response(JSON.stringify(stale), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    const safeFallback = requestedSymbols.length > 0
-      ? { cryptoData: [] }
-      : STATIC_FALLBACK_DATA;
-
-    return new Response(JSON.stringify(safeFallback), {
+    return new Response(JSON.stringify({ cryptoData: [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
