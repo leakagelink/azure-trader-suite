@@ -25,6 +25,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isForexSymbol, isCommoditySymbol } from "@/lib/marketSymbols";
 import TradingChart, { type Candle } from "@/components/charts/TradingChart";
 import { useChartDrawings, type DrawingMode } from "@/hooks/useChartDrawings";
+import { useChartIndicators } from "@/hooks/useChartIndicators";
+import IndicatorsMenu from "@/components/charts/IndicatorsMenu";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 
@@ -73,6 +75,7 @@ export default function Charts() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const { drawings, setDrawings } = useChartDrawings(symbol);
+  const { indicators, setIndicators } = useChartIndicators(symbol);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -215,7 +218,8 @@ export default function Charts() {
               </>
             )}
           </div>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
+            <IndicatorsMenu indicators={indicators} setIndicators={setIndicators} />
             <button
               onClick={() => setFullscreen(true)}
               className="rounded-md p-2 hover:bg-muted/40"
@@ -258,7 +262,7 @@ export default function Charts() {
 
       {/* Chart */}
       <div className="relative flex-1 overflow-hidden">
-        <TradingChart symbol={symbol} candles={candles} mode={mode} color={color} magnet={magnet} />
+        <TradingChart symbol={symbol} candles={candles} mode={mode} color={color} magnet={magnet} indicators={indicators} />
 
         {fullscreen && (
           <button
