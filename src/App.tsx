@@ -22,6 +22,7 @@ import PendingApproval from "./pages/PendingApproval";
 import UserApprovals from "./pages/UserApprovals";
 import News from "./pages/News";
 import Signals from "./pages/Signals";
+import Charts from "./pages/Charts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -172,6 +173,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Signals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/charts"
+              element={
+                <ProtectedRoute>
+                  <Charts />
                 </ProtectedRoute>
               }
             />
