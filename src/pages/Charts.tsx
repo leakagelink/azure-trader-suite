@@ -218,7 +218,8 @@ export default function Charts() {
               </>
             )}
           </div>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
+            <IndicatorsMenu indicators={indicators} setIndicators={setIndicators} />
             <button
               onClick={() => setFullscreen(true)}
               className="rounded-md p-2 hover:bg-muted/40"
