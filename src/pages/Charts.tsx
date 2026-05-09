@@ -68,6 +68,7 @@ export default function Charts() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<DrawingMode>("cursor");
   const [color, setColor] = useState("#3b82f6");
+  const [magnet, setMagnet] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
