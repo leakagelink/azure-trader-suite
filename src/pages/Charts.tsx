@@ -25,7 +25,7 @@ import {
   Search,
   CandlestickChart,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { isForexSymbol, isCommoditySymbol } from "@/lib/marketSymbols";
 import TradingChart, { type Candle, type ChartType } from "@/components/charts/TradingChart";
