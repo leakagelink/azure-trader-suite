@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useBinanceKlineStream } from "@/hooks/useBinanceKlineStream";
 import {
   ArrowLeft,
   ChevronDown,
@@ -117,6 +118,37 @@ export default function Charts() {
     };
   }, [symbol, tf]);
 
+  const isCrypto = !isForexSymbol(symbol) && !isCommoditySymbol(symbol);
+  const [live, setLive] = useState(false);
+
+  const handleLiveCandle = useCallback((c: Candle, _final: boolean) => {
+    setLive(true);
+    setCandles((prev) => {
+      if (!prev.length) return [c];
+      const last = prev[prev.length - 1];
+      if (c.time === last.time) {
+        const next = prev.slice(0, -1);
+        next.push(c);
+        return next;
+      }
+      if (c.time > last.time) {
+        return [...prev, c];
+      }
+      return prev;
+    });
+  }, []);
+
+  useBinanceKlineStream({
+    symbol,
+    interval: tf,
+    enabled: isCrypto,
+    onCandle: handleLiveCandle,
+  });
+
+  useEffect(() => {
+    setLive(false);
+  }, [symbol, tf]);
+
   const undo = () => setDrawings((prev) => prev.slice(0, -1));
   const clearAll = () => setDrawings([]);
 
@@ -208,6 +240,15 @@ export default function Charts() {
             </button>
           ))}
           {loading && <span className="ml-2 text-xs text-muted-foreground">loading…</span>}
+          {isCrypto && live && !loading && (
+            <span className="ml-2 flex items-center gap-1 text-[10px] font-semibold uppercase text-emerald-400">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              </span>
+              Live
+            </span>
+          )}
         </div>
       )}
 
