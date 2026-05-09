@@ -118,6 +118,37 @@ export default function Charts() {
     };
   }, [symbol, tf]);
 
+  const isCrypto = !isForexSymbol(symbol) && !isCommoditySymbol(symbol);
+  const [live, setLive] = useState(false);
+
+  const handleLiveCandle = useCallback((c: Candle, _final: boolean) => {
+    setLive(true);
+    setCandles((prev) => {
+      if (!prev.length) return [c];
+      const last = prev[prev.length - 1];
+      if (c.time === last.time) {
+        const next = prev.slice(0, -1);
+        next.push(c);
+        return next;
+      }
+      if (c.time > last.time) {
+        return [...prev, c];
+      }
+      return prev;
+    });
+  }, []);
+
+  useBinanceKlineStream({
+    symbol,
+    interval: tf,
+    enabled: isCrypto,
+    onCandle: handleLiveCandle,
+  });
+
+  useEffect(() => {
+    setLive(false);
+  }, [symbol, tf]);
+
   const undo = () => setDrawings((prev) => prev.slice(0, -1));
   const clearAll = () => setDrawings([]);
 
