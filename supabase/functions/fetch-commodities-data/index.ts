@@ -38,6 +38,61 @@ const COMMODITIES_CONFIG = [
   { name: "Brent Oil", symbol: "BRENT", apiSymbol: "BRENT", icon: "🛢️", fullName: "Brent Crude Oil" },
 ];
 
+// Yahoo Finance chart endpoint (no API key, no auth crumb required)
+async function fetchOneCommodityFromYahoo(meta: { yahoo: string; symbol: string; name: string; icon: string; fullName: string }): Promise<any | null> {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(meta.yahoo)}?interval=1d&range=2d`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    });
+    if (!res.ok) {
+      console.error(`Yahoo chart ${meta.yahoo} HTTP error:`, res.status);
+      return null;
+    }
+    const data = await res.json();
+    const m = data?.chart?.result?.[0]?.meta;
+    const price = m?.regularMarketPrice;
+    const prevClose = m?.chartPreviousClose ?? m?.previousClose;
+    if (typeof price !== 'number') return null;
+    const changePct = typeof prevClose === 'number' && prevClose > 0
+      ? ((price - prevClose) / prevClose) * 100
+      : 0;
+    return {
+      name: meta.name,
+      symbol: meta.symbol,
+      price: price.toFixed(2),
+      change: `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`,
+      isPositive: changePct >= 0,
+      icon: meta.icon,
+      currencySymbol: '$',
+      fullName: meta.fullName,
+    };
+  } catch (e) {
+    console.error(`Yahoo chart ${meta.yahoo} error:`, e);
+    return null;
+  }
+}
+
+async function fetchFromYahooFinance(): Promise<any[]> {
+  const symbolMap = [
+    { yahoo: 'GC=F', symbol: 'XAU', name: 'Gold', icon: '🥇', fullName: 'Gold' },
+    { yahoo: 'SI=F', symbol: 'XAG', name: 'Silver', icon: '🥈', fullName: 'Silver' },
+    { yahoo: 'PL=F', symbol: 'XPT', name: 'Platinum', icon: '💎', fullName: 'Platinum' },
+    { yahoo: 'PA=F', symbol: 'XPD', name: 'Palladium', icon: '⬜', fullName: 'Palladium' },
+    { yahoo: 'HG=F', symbol: 'XCU', name: 'Copper', icon: '🔶', fullName: 'Copper' },
+    { yahoo: 'CL=F', symbol: 'WTI', name: 'Crude Oil', icon: '🛢️', fullName: 'Crude Oil WTI' },
+    { yahoo: 'BZ=F', symbol: 'BRENT', name: 'Brent Oil', icon: '🛢️', fullName: 'Brent Crude Oil' },
+    { yahoo: 'NG=F', symbol: 'NG', name: 'Natural Gas', icon: '🔥', fullName: 'Natural Gas' },
+  ];
+  const results = await Promise.all(symbolMap.map(fetchOneCommodityFromYahoo));
+  const filtered = results.filter((r) => r !== null);
+  console.log(`Yahoo Finance returned ${filtered.length}/${symbolMap.length} commodities`);
+  return filtered;
+}
+
 // Fetch commodity prices from CoinGecko (FREE - no API key needed)
 // Uses commodity-backed tokens: PAXG (gold), calculates silver from gold/silver ratio
 async function fetchFromCoinGecko(): Promise<any[]> {
@@ -272,20 +327,32 @@ serve(async (req) => {
     let energyData: any[] = [];
     let dataSource = 'static';
 
-    // Try GoldPricez API first for metals (if configured)
+    // Try Yahoo Finance first (free, no key, covers metals + energy)
+    console.log('Trying Yahoo Finance for commodities...');
+    commoditiesData = await fetchFromYahooFinance();
+    if (commoditiesData.length > 0) dataSource = 'Yahoo';
+
+    // Try GoldPricez API for metals (if configured) - only if Yahoo missed metals
     const goldPricezApiKey = Deno.env.get('GOLDPRICEZ_API_KEY');
-    
-    if (goldPricezApiKey) {
+    const hasMetals = commoditiesData.some((c) => ['XAU','XAG','XPT','XPD'].includes(c.symbol));
+    if (!hasMetals && goldPricezApiKey) {
       console.log('Trying GoldPricez API for metals...');
-      commoditiesData = await fetchFromGoldPricez(goldPricezApiKey);
-      if (commoditiesData.length > 0) dataSource = 'GoldPricez';
+      const metals = await fetchFromGoldPricez(goldPricezApiKey);
+      if (metals.length > 0) {
+        commoditiesData = [...commoditiesData, ...metals];
+        dataSource = dataSource === 'static' ? 'GoldPricez' : `${dataSource}+GoldPricez`;
+      }
     }
-    
-    // If GoldPricez failed or not configured, try CoinGecko (FREE - no API key needed)
-    if (commoditiesData.length === 0) {
+
+    // CoinGecko fallback for metals if still missing
+    const hasGold = commoditiesData.some((c) => c.symbol === 'XAU');
+    if (!hasGold) {
       console.log('Trying CoinGecko (free API) for metals...');
-      commoditiesData = await fetchFromCoinGecko();
-      if (commoditiesData.length > 0) dataSource = 'CoinGecko';
+      const cg = await fetchFromCoinGecko();
+      if (cg.length > 0) {
+        commoditiesData = [...commoditiesData, ...cg];
+        dataSource = dataSource === 'static' ? 'CoinGecko' : `${dataSource}+CoinGecko`;
+      }
     }
 
     // Try FMP API for Oil, Gas, Copper (uses existing FMP_API_KEY)
