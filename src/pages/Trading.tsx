@@ -11,6 +11,7 @@ import { Tabs as InputTabs, TabsList as InputTabsList, TabsTrigger as InputTabsT
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeForexData, invokeForexChartData } from "@/lib/forexCache";
 import {
   Dialog,
   DialogContent,
