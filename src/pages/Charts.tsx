@@ -24,6 +24,13 @@ import {
   Trash2,
   Search,
   CandlestickChart,
+  Pencil,
+  Activity,
+  Bell,
+  Sparkles,
+  Pin,
+  LineChart as LineChartIcon,
+  X,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
