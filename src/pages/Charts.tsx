@@ -121,6 +121,7 @@ export default function Charts() {
   const [query, setQuery] = useState("");
   const [chartType, setChartType] = useState<ChartType>("candles");
   const [chartTypeOpen, setChartTypeOpen] = useState(false);
+  const [drawOpen, setDrawOpen] = useState(false);
   const { drawings, setDrawings } = useChartDrawings(symbol);
   const { indicators, setIndicators } = useChartIndicators(symbol);
   const { alerts, setAlerts } = usePriceAlerts(symbol);
