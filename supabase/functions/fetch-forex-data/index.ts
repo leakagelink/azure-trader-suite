@@ -25,45 +25,49 @@ const FALLBACK_RATES: Record<string, number> = {
   CHF: 0.90, CNY: 7.30, INR: 85.5, NZD: 1.78, SGD: 1.36,
 };
 
-// Yahoo Finance unofficial endpoint - no API key needed, near real-time quotes
-async function fetchFromYahooFinance(currencies: string[]): Promise<{ rates: Record<string, number>, changes: Record<string, number> } | null> {
+// Yahoo Finance chart endpoint (no API key, no auth crumb required)
+async function fetchOneFromYahoo(currency: string): Promise<{ price: number; changePct: number } | null> {
   try {
-    const symbols = currencies.map((c) => `USD${c}=X`).join(',');
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
-    console.log('Fetching from Yahoo Finance:', url);
-    const response = await fetch(url, {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/USD${currency}=X?interval=1d&range=2d`;
+    const res = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json',
       },
     });
-    if (!response.ok) {
-      console.error('Yahoo Finance HTTP error:', response.status);
+    if (!res.ok) {
+      console.error(`Yahoo chart ${currency} HTTP error:`, res.status);
       return null;
     }
-    const data = await response.json();
-    const results = data?.quoteResponse?.result;
-    if (!Array.isArray(results) || results.length === 0) {
-      console.error('Yahoo Finance: no results');
-      return null;
-    }
-    const rates: Record<string, number> = {};
-    const changes: Record<string, number> = {};
-    for (const q of results) {
-      const sym = String(q.symbol || '').replace('USD', '').replace('=X', '');
-      const price = q.regularMarketPrice;
-      const changePct = q.regularMarketChangePercent;
-      if (sym && typeof price === 'number') {
-        rates[sym] = price;
-        if (typeof changePct === 'number') changes[sym] = changePct;
-      }
-    }
-    if (Object.keys(rates).length === 0) return null;
-    return { rates, changes };
+    const data = await res.json();
+    const result = data?.chart?.result?.[0];
+    const meta = result?.meta;
+    const price = meta?.regularMarketPrice;
+    const prevClose = meta?.chartPreviousClose ?? meta?.previousClose;
+    if (typeof price !== 'number') return null;
+    const changePct = typeof prevClose === 'number' && prevClose > 0
+      ? ((price - prevClose) / prevClose) * 100
+      : 0;
+    return { price, changePct };
   } catch (e) {
-    console.error('Yahoo Finance fetch error:', e);
+    console.error(`Yahoo chart ${currency} error:`, e);
     return null;
   }
+}
+
+async function fetchFromYahooFinance(currencies: string[]): Promise<{ rates: Record<string, number>, changes: Record<string, number> } | null> {
+  const rates: Record<string, number> = {};
+  const changes: Record<string, number> = {};
+  const results = await Promise.all(currencies.map((c) => fetchOneFromYahoo(c).then((r) => ({ c, r }))));
+  for (const { c, r } of results) {
+    if (r) {
+      rates[c] = r.price;
+      changes[c] = r.changePct;
+    }
+  }
+  if (Object.keys(rates).length === 0) return null;
+  console.log(`Yahoo Finance returned ${Object.keys(rates).length}/${currencies.length} rates`);
+  return { rates, changes };
 }
 
 async function fetchFromExchangerateHost(currencies: string[]): Promise<Record<string, number> | null> {
