@@ -25,6 +25,47 @@ const FALLBACK_RATES: Record<string, number> = {
   CHF: 0.90, CNY: 7.30, INR: 85.5, NZD: 1.78, SGD: 1.36,
 };
 
+// Yahoo Finance unofficial endpoint - no API key needed, near real-time quotes
+async function fetchFromYahooFinance(currencies: string[]): Promise<{ rates: Record<string, number>, changes: Record<string, number> } | null> {
+  try {
+    const symbols = currencies.map((c) => `USD${c}=X`).join(',');
+    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
+    console.log('Fetching from Yahoo Finance:', url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      console.error('Yahoo Finance HTTP error:', response.status);
+      return null;
+    }
+    const data = await response.json();
+    const results = data?.quoteResponse?.result;
+    if (!Array.isArray(results) || results.length === 0) {
+      console.error('Yahoo Finance: no results');
+      return null;
+    }
+    const rates: Record<string, number> = {};
+    const changes: Record<string, number> = {};
+    for (const q of results) {
+      const sym = String(q.symbol || '').replace('USD', '').replace('=X', '');
+      const price = q.regularMarketPrice;
+      const changePct = q.regularMarketChangePercent;
+      if (sym && typeof price === 'number') {
+        rates[sym] = price;
+        if (typeof changePct === 'number') changes[sym] = changePct;
+      }
+    }
+    if (Object.keys(rates).length === 0) return null;
+    return { rates, changes };
+  } catch (e) {
+    console.error('Yahoo Finance fetch error:', e);
+    return null;
+  }
+}
+
 async function fetchFromExchangerateHost(currencies: string[]): Promise<Record<string, number> | null> {
   try {
     const url = `https://api.exchangerate.host/live?access_key=${EXCHANGERATE_HOST_KEY}&source=USD&currencies=${currencies.join(',')}`;
@@ -80,15 +121,29 @@ serve(async (req) => {
     const currencies = ['EUR','GBP','JPY','AUD','CAD','CHF','CNY','INR','NZD','SGD'];
 
     let rates: Record<string, number> | null = null;
+    let changes: Record<string, number> = {};
     let source = 'fallback';
 
-    // Try exchangerate.host first
-    rates = await fetchFromExchangerateHost(currencies);
-    if (rates) {
-      source = 'exchangerate.host';
-      console.log('Got rates from exchangerate.host');
-    } else {
-      // Fallback to Frankfurter (free, no key)
+    // Try Yahoo Finance first (free, no key, near real-time)
+    const yahoo = await fetchFromYahooFinance(currencies);
+    if (yahoo) {
+      rates = yahoo.rates;
+      changes = yahoo.changes;
+      source = 'yahoo';
+      console.log('Got rates from Yahoo Finance');
+    }
+
+    // Fallback to exchangerate.host
+    if (!rates) {
+      rates = await fetchFromExchangerateHost(currencies);
+      if (rates) {
+        source = 'exchangerate.host';
+        console.log('Got rates from exchangerate.host');
+      }
+    }
+
+    // Fallback to Frankfurter (free, no key)
+    if (!rates) {
       rates = await fetchFromFrankfurter(currencies);
       if (rates) {
         source = 'frankfurter';
@@ -106,7 +161,7 @@ serve(async (req) => {
     const forexData = currencies.map((currency) => {
       const info = currencyInfo[currency] || { symbol: currency, flag: '💱', name: currency };
       const rateNum = rates![currency] ?? FALLBACK_RATES[currency] ?? 1.0;
-      const changePercent = (Math.random() - 0.5) * 2;
+      const changePercent = changes[currency] ?? (Math.random() - 0.5) * 2;
       return {
         name: `${currency}/${BASE_CURRENCY}`,
         symbol: currency,
