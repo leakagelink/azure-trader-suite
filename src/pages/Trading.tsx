@@ -508,14 +508,11 @@ const Trading = () => {
         }
       }
       
-      const functionName = isForex ? 'fetch-forex-chart-data' : 'fetch-taapi-data';
-      
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: { 
-          symbol: symbol.toUpperCase(),
-          interval: timeframe
-        }
-      });
+      const { data, error } = isForex
+        ? await invokeForexChartData(symbol.toUpperCase(), timeframe)
+        : await supabase.functions.invoke('fetch-taapi-data', {
+            body: { symbol: symbol.toUpperCase(), interval: timeframe }
+          });
 
       if (error) {
         console.error('Error fetching data:', error);
