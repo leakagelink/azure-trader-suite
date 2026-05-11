@@ -347,15 +347,19 @@ export default function Charts() {
                     />
                   </div>
                   <div className="max-h-80 overflow-y-auto p-1">
-                    {filtered.map((s) => (
+                    {filtered.map((s) => {
+                      const isActive = s.symbol.toUpperCase() === symbol.toUpperCase();
+                      return (
                       <button
                         key={s.symbol}
                         onClick={() => {
-                          setSymbol(s.symbol);
+                          setSymbol(s.symbol.toUpperCase());
                           setSearchOpen(false);
                           setQuery("");
                         }}
-                        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-muted/50"
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-muted/50 ${
+                          isActive ? "bg-primary/10 text-primary" : ""
+                        }`}
                       >
                         <div>
                           <div className="font-semibold">{s.symbol}</div>
@@ -365,7 +369,8 @@ export default function Charts() {
                           {s.market}
                         </span>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </>
