@@ -446,10 +446,10 @@ export default function Charts() {
 
         {/* Bottom tool dock */}
         <div
-          className="absolute left-1/2 z-20 -translate-x-1/2 rounded-2xl border border-border/50 bg-background/80 p-1.5 shadow-2xl backdrop-blur-xl"
+          className="absolute left-1/2 z-20 max-w-[calc(100vw-16px)] -translate-x-1/2 overflow-x-auto rounded-2xl border border-border/50 bg-background/80 p-1.5 shadow-2xl backdrop-blur-xl scrollbar-hide"
           style={{ bottom: `calc(${fullscreen ? "12px" : "76px"} + env(safe-area-inset-bottom))` }}
         >
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 w-max">
             {TOOLS.map((t) => {
               const active = mode === t.mode;
               return (
