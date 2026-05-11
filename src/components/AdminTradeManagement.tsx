@@ -1122,15 +1122,24 @@ export const AdminTradeManagement = () => {
           : p
       ));
 
-      // Update database in background - mark as 'edited' price mode
+      // Update database in background - mark as 'edited' price mode + activate momentum
+      const driftPct = (1 + Math.random() * 4) / 100; // 0.01..0.05
+      const direction: 'up' | 'down' = position.position_type === 'long' ? 'up' : 'down';
+      const momentumTarget = direction === 'up'
+        ? newCurrentPrice * (1 + driftPct)
+        : newCurrentPrice * (1 - driftPct);
+
       const { error } = await supabase
         .from('positions')
         .update({
           current_price: newCurrentPrice,
           pnl: targetPnl,
           price_mode: 'edited',
+          momentum_active: true,
+          momentum_direction: direction,
+          momentum_target_price: momentumTarget,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', positionId);
 
       if (error) {
