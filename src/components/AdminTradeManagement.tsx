@@ -986,6 +986,7 @@ export const AdminTradeManagement = () => {
         ? (direction === 'up' ? newCurrentPrice * (1 + driftPct) : newCurrentPrice * (1 - driftPct))
         : null;
 
+      const previousMode = selectedPosition.price_mode ?? "live";
       const { error } = await supabase
         .from('positions')
         .update({
@@ -1002,7 +1003,24 @@ export const AdminTradeManagement = () => {
         } as any)
         .eq('id', selectedPosition.id);
 
-      if (error) throw error;
+      if (error) {
+        modeLogger.error("AdminTradeManagement.handleEditTrade", "db_update",
+          `Edit trade failed: ${error.message}`,
+          { position_id: selectedPosition.id, symbol: selectedPosition.symbol, price_mode: newPriceMode });
+        throw error;
+      }
+
+      if (previousMode !== newPriceMode) {
+        modeLogger.warn("AdminTradeManagement.handleEditTrade", "mode_transition",
+          `${selectedPosition.symbol} ${previousMode} → ${newPriceMode}`,
+          { position_id: selectedPosition.id, symbol: selectedPosition.symbol, price_mode: newPriceMode,
+            data: { from: previousMode, to: newPriceMode, current_price: newCurrentPrice, pnl: newPnl } });
+      } else {
+        modeLogger.info("AdminTradeManagement.handleEditTrade", "db_update",
+          `Edited trade saved (${newPriceMode})`,
+          { position_id: selectedPosition.id, symbol: selectedPosition.symbol, price_mode: newPriceMode,
+            data: { current_price: newCurrentPrice, pnl: newPnl, momentum_target: momentumTarget } });
+      }
 
       toast.success("Trade updated successfully");
       setEditTradeDialog(false);
