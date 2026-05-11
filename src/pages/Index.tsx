@@ -674,45 +674,7 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 sm:py-24 bg-gradient-to-br from-primary via-[hsl(15_70%_30%)] to-accent relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-        <div className="absolute top-10 right-10 w-32 sm:w-64 h-32 sm:h-64 bg-accent/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-40 sm:w-80 h-40 sm:h-80 bg-primary/40 rounded-full blur-3xl" />
-        
-        <div className="container mx-auto px-3 sm:px-4 relative z-10">
-          <div className="text-center mb-8 sm:mb-14">
-            <Badge className="mb-3 sm:mb-4 bg-white/15 text-white border-white/30 backdrop-blur-md px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold">
-              <Globe className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5" /> Trusted Worldwide
-            </Badge>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 sm:mb-3">
-              Numbers That <span className="gold-text">Speak</span>
-            </h2>
-            <p className="text-sm sm:text-lg text-white/85 max-w-2xl mx-auto">A growing global community of traders</p>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8 max-w-6xl mx-auto">
-            {[
-              { label: "Active Traders", value: "50K+", icon: Users },
-              { label: "Daily Volume", value: "$2.5B+", icon: TrendingUp },
-              { label: "Markets Available", value: "150+", icon: Globe },
-              { label: "Countries Supported", value: "100+", icon: Award }
-            ].map((stat, index) => (
-              <div 
-                key={index} 
-                className="group text-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/15 hover:border-accent/60 hover:-translate-y-1 transition-all duration-500 animate-in fade-in zoom-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 flex items-center justify-center mx-auto mb-2 sm:mb-4 group-hover:scale-110 transition-transform">
-                  <stat.icon className="h-5 w-5 sm:h-7 sm:w-7 text-accent" />
-                </div>
-                <div className="text-2xl sm:text-5xl font-black gold-text mb-1 sm:mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-xs sm:text-base text-white/90 font-semibold tracking-wide">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Trusted Worldwide section hidden */}
 
       {/* CTA Section */}
       <section className="py-12 sm:py-28 bg-gradient-to-br from-primary via-[hsl(15_75%_28%)] to-accent relative overflow-hidden">
