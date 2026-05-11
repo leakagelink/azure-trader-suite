@@ -254,13 +254,13 @@ function TradingChart({
         magnet={magnet}
       />
       {last && (
-        <div className="absolute left-3 top-3 z-10 rounded-lg border border-border/40 bg-background/70 px-3 py-1.5 text-xs backdrop-blur-md">
+        <div className="pointer-events-none absolute left-2 right-2 top-2 z-10 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-border/40 bg-background/70 px-2.5 py-1.5 text-[10px] backdrop-blur-md sm:text-xs">
           <span className="font-semibold">{symbol}</span>
-          <span className="ml-3 text-muted-foreground">O</span> {last.open.toFixed(2)}
-          <span className="ml-2 text-muted-foreground">H</span> {last.high.toFixed(2)}
-          <span className="ml-2 text-muted-foreground">L</span> {last.low.toFixed(2)}
-          <span className="ml-2 text-muted-foreground">C</span> {last.close.toFixed(2)}
-          <span className={`ml-3 font-semibold ${change >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+          <span className="text-muted-foreground">O <span className="text-foreground">{last.open.toFixed(2)}</span></span>
+          <span className="text-muted-foreground">H <span className="text-foreground">{last.high.toFixed(2)}</span></span>
+          <span className="text-muted-foreground">L <span className="text-foreground">{last.low.toFixed(2)}</span></span>
+          <span className="text-muted-foreground">C <span className="text-foreground">{last.close.toFixed(2)}</span></span>
+          <span className={`font-semibold ${change >= 0 ? "text-emerald-500" : "text-red-500"}`}>
             {change >= 0 ? "+" : ""}
             {change.toFixed(2)}%
           </span>
