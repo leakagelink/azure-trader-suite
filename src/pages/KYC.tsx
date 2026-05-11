@@ -281,13 +281,13 @@ const KYC = () => {
               <div className="flex items-center justify-between mb-3">
                 <CardTitle className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
-                  Step {step} of 4 — {STEPS[step - 1].title}
+                  {t("kyc.stepOf", { step, total: 4, name: t(`kyc.steps.${STEP_KEYS[step - 1].key}`) })}
                 </CardTitle>
                 <Badge variant="outline">{Math.round((step / 4) * 100)}%</Badge>
               </div>
               <Progress value={(step / 4) * 100} className="h-2" />
               <div className="flex justify-between mt-3">
-                {STEPS.map((s) => {
+                {STEP_KEYS.map((s) => {
                   const Icon = s.icon;
                   const active = step === s.id;
                   const done = step > s.id;
@@ -305,7 +305,7 @@ const KYC = () => {
                         {done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                       </div>
                       <span className={`text-[10px] hidden sm:block ${active ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
-                        {s.title}
+                        {t(`kyc.steps.${s.key}`)}
                       </span>
                     </div>
                   );
