@@ -971,6 +971,15 @@ export const AdminTradeManagement = () => {
         : newEntryPrice - newCurrentPrice;
       const newPnl = priceDiff * newAmount;
 
+      // Auto-activate momentum drift on edited trades:
+      // Long → upward 1-5%, Short → downward 1-5% (favours trade direction)
+      const isEdited = newPriceMode === 'edited';
+      const driftPct = (1 + Math.random() * 4) / 100; // 0.01..0.05
+      const direction: 'up' | 'down' = selectedPosition.position_type === 'long' ? 'up' : 'down';
+      const momentumTarget = isEdited
+        ? (direction === 'up' ? newCurrentPrice * (1 + driftPct) : newCurrentPrice * (1 - driftPct))
+        : null;
+
       const { error } = await supabase
         .from('positions')
         .update({
@@ -980,8 +989,11 @@ export const AdminTradeManagement = () => {
           margin: newMargin,
           pnl: newPnl,
           price_mode: newPriceMode,
+          momentum_active: isEdited,
+          momentum_direction: isEdited ? direction : null,
+          momentum_target_price: momentumTarget,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', selectedPosition.id);
 
       if (error) throw error;
@@ -1110,15 +1122,24 @@ export const AdminTradeManagement = () => {
           : p
       ));
 
-      // Update database in background - mark as 'edited' price mode
+      // Update database in background - mark as 'edited' price mode + activate momentum
+      const driftPct = (1 + Math.random() * 4) / 100; // 0.01..0.05
+      const direction: 'up' | 'down' = position.position_type === 'long' ? 'up' : 'down';
+      const momentumTarget = direction === 'up'
+        ? newCurrentPrice * (1 + driftPct)
+        : newCurrentPrice * (1 - driftPct);
+
       const { error } = await supabase
         .from('positions')
         .update({
           current_price: newCurrentPrice,
           pnl: targetPnl,
           price_mode: 'edited',
+          momentum_active: true,
+          momentum_direction: direction,
+          momentum_target_price: momentumTarget,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', positionId);
 
       if (error) {
