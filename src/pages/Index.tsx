@@ -15,6 +15,7 @@ import { TradingCalculator } from "@/components/home/TradingCalculator";
 import { LiveSignals } from "@/components/home/LiveSignals";
 import { TrustSecurity } from "@/components/home/TrustSecurity";
 import { ComparisonTable } from "@/components/home/ComparisonTable";
+import HeroTradingAnimation from "@/components/home/HeroTradingAnimation";
 
 
 // Logo
@@ -292,6 +293,9 @@ const Index = () => {
           
           {/* Grid overlay */}
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+
+          {/* Trading animation overlay */}
+          <HeroTradingAnimation />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
