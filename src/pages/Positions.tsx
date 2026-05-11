@@ -342,13 +342,31 @@ const Positions = () => {
                 current_price: currentPrice,
                 pnl,
                 updated_at: new Date().toISOString(),
-              })
+              }, { count: "exact" } as any)
               .eq("id", position.id)
               .eq("status", "open")
               .neq("price_mode", "edited")
-              .then(({ error }) => {
-                if (error) console.error("Error updating position:", error);
+              .then(({ error, count }) => {
+                if (error) {
+                  modeLogger.error("Positions.tsx/livefeed", "db_update",
+                    `Live price write failed: ${error.message}`,
+                    { position_id: position.id, symbol: position.symbol, price_mode: position.price_mode });
+                  console.error("Error updating position:", error);
+                } else if (count === 0) {
+                  modeLogger.warn("Positions.tsx/livefeed", "db_guard_block",
+                    `Live write blocked by guard (row likely flipped to edited)`,
+                    { position_id: position.id, symbol: position.symbol, price_mode: position.price_mode });
+                } else {
+                  modeLogger.debug("Positions.tsx/livefeed", "db_update",
+                    `Live price tick written`,
+                    { position_id: position.id, symbol: position.symbol, price_mode: "live",
+                      data: { current_price: currentPrice, pnl } });
+                }
               });
+          } else {
+            modeLogger.debug("Positions.tsx/livefeed", "db_skip",
+              `Skipped live write — row is in edited mode`,
+              { position_id: position.id, symbol: position.symbol, price_mode: "edited" });
           }
 
           return {
