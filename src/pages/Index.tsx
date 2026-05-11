@@ -120,7 +120,7 @@ const Index = () => {
     fetchCryptoPrices().then(() => applyMomentum());
     // Refresh base prices every 60s, apply momentum every 2s
     const baseInterval = setInterval(fetchCryptoPrices, 60000);
-    const momentumInterval = setInterval(applyMomentum, 2000);
+    const momentumInterval = setInterval(applyMomentum, 0.02);
     return () => {
       clearInterval(baseInterval);
       clearInterval(momentumInterval);
