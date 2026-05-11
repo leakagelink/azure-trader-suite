@@ -156,6 +156,8 @@ export default function Charts() {
   const [tf, setTf] = useState<Tf>("1h");
   const [candles, setCandles] = useState<Candle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const [mode, setMode] = useState<DrawingMode>("cursor");
   const [color, setColor] = useState("#3b82f6");
   const [magnet, setMagnet] = useState(false);
