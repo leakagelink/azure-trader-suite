@@ -74,7 +74,7 @@ const TradingList = ({ data, momentumEnabled = true }: TradingListProps) => {
 
       setPriceFluctuations(newFluctuations);
       setItemMomentum(newMomentum);
-    }, 0.02);
+    }, 2000);
 
     return () => {
       if (intervalRef.current) {
