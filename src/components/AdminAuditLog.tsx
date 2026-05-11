@@ -10,6 +10,7 @@ import { History, RefreshCw, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { EditedTradesReconciliation } from "./EditedTradesReconciliation";
 import { PriceModeStressTest } from "./PriceModeStressTest";
+import { ModeEventsConsole } from "./ModeEventsConsole";
 
 interface AuditEntry {
   id: string;
