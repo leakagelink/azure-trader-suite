@@ -291,6 +291,9 @@ export type Database = {
           id: string
           leverage: number
           margin: number
+          momentum_active: boolean
+          momentum_direction: string | null
+          momentum_target_price: number | null
           opened_at: string
           pnl: number | null
           position_type: Database["public"]["Enums"]["position_type"]
@@ -313,6 +316,9 @@ export type Database = {
           id?: string
           leverage?: number
           margin: number
+          momentum_active?: boolean
+          momentum_direction?: string | null
+          momentum_target_price?: number | null
           opened_at?: string
           pnl?: number | null
           position_type: Database["public"]["Enums"]["position_type"]
@@ -335,6 +341,9 @@ export type Database = {
           id?: string
           leverage?: number
           margin?: number
+          momentum_active?: boolean
+          momentum_direction?: string | null
+          momentum_target_price?: number | null
           opened_at?: string
           pnl?: number | null
           position_type?: Database["public"]["Enums"]["position_type"]
@@ -680,6 +689,7 @@ export type Database = {
         Args: { transaction_ref?: string; withdrawal_id: string }
         Returns: undefined
       }
+      drift_edited_positions: { Args: never; Returns: undefined }
       generate_client_id: { Args: never; Returns: string }
       get_active_api_key: { Args: { p_service_name: string }; Returns: string }
       has_role: {
