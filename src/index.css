@@ -44,12 +44,12 @@ All colors MUST be HSL.
 
     --radius: 1rem;
 
-    /* Flat fills (no gradients) */
-    --gradient-primary: hsl(222 85% 58%);
-    --gradient-accent: hsl(215 90% 70%);
-    --gradient-hero: hsl(220 15% 12%);
-    --gradient-gold: hsl(222 85% 58%);
-    --gradient-radial: transparent;
+    /* Royal blue gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(222 85% 58%), hsl(225 75% 45%));
+    --gradient-accent: linear-gradient(135deg, hsl(215 90% 70%), hsl(222 85% 58%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 15% 10%) 0%, hsl(220 14% 18%) 45%, hsl(222 75% 45%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(215 90% 75%), hsl(222 85% 60%), hsl(225 80% 55%));
+    --gradient-radial: radial-gradient(ellipse at top, hsl(222 85% 58% / 0.22), transparent 60%);
 
     /* Royal blue glow shadows */
     --shadow-card: 0 4px 14px -2px hsl(222 85% 58% / 0.15), 0 2px 6px -2px hsl(0 0% 0% / 0.45);
@@ -145,35 +145,47 @@ All colors MUST be HSL.
     @apply backdrop-blur-xl bg-black/10 border border-white/10;
   }
 
-  /* Shimmer effect (flat, no gradient) */
+  /* Shimmer effect */
   .shimmer {
-    background: hsl(var(--primary) / 0.08);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.1) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
   }
 
-  /* Solid accent text (was gradient) */
+  /* Gradient text */
   .gradient-text {
-    color: hsl(var(--accent));
-    background: none;
-    -webkit-text-fill-color: currentColor;
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+    background-size: 200% auto;
+    animation: gradient-x 3s ease infinite;
   }
 
+  /* Metallic royal blue text - premium accent */
   .gold-text {
-    color: hsl(var(--accent));
-    background: none;
-    -webkit-text-fill-color: currentColor;
-    filter: none;
+    background: linear-gradient(135deg, hsl(215 90% 80%), hsl(222 88% 65%), hsl(225 85% 58%), hsl(215 95% 82%));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-x 4s ease infinite;
+    filter: drop-shadow(0 0 24px hsl(215 90% 70% / 0.4));
   }
 
   .emerald-text {
-    color: hsl(var(--accent));
-    background: none;
-    -webkit-text-fill-color: currentColor;
+    background: linear-gradient(135deg, hsl(215 90% 80%), hsl(222 85% 60%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
-  /* Glass card - flat slate */
+  /* Glass card - premium slate-tinted */
   .glass-card {
     @apply backdrop-blur-2xl border;
-    background: hsl(220 14% 16% / 0.85);
+    background: linear-gradient(135deg, hsl(220 14% 18% / 0.6), hsl(220 16% 10% / 0.4));
     border-color: hsl(215 90% 70% / 0.14);
     box-shadow: 0 8px 32px -8px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(215 90% 70% / 0.08);
   }
@@ -183,10 +195,10 @@ All colors MUST be HSL.
     box-shadow: 0 12px 40px -8px hsl(222 85% 58% / 0.30), inset 0 1px 0 hsl(215 90% 70% / 0.18);
   }
 
-  /* Section divider — flat */
+  /* Section divider with gradient line */
   .divider-gold {
     height: 1px;
-    background: hsl(var(--border));
+    background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.5), transparent);
   }
 
   /* Glow effect */
@@ -233,7 +245,7 @@ All colors MUST be HSL.
     @apply -translate-y-2 shadow-2xl;
   }
 
-  /* Animated border — flat */
+  /* Animated border */
   .animated-border {
     position: relative;
   }
@@ -241,9 +253,16 @@ All colors MUST be HSL.
   .animated-border::before {
     content: '';
     position: absolute;
-    inset: -1px;
+    inset: -2px;
     border-radius: inherit;
-    background: hsl(var(--primary) / 0.5);
+    background: linear-gradient(
+      45deg,
+      hsl(var(--primary)),
+      hsl(var(--accent)),
+      hsl(var(--primary))
+    );
+    background-size: 200% 200%;
+    animation: gradient-x 3s ease infinite;
     z-index: -1;
   }
 
@@ -261,11 +280,3 @@ All colors MUST be HSL.
     pointer-events: none;
   }
 }
-
-/* Global flatten — neutralize ALL Tailwind/inline gradients across the app */
-@layer utilities {
-  [class*="bg-gradient-"] {
-    background-image: none !important;
-  }
-}
-
