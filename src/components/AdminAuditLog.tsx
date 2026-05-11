@@ -146,6 +146,7 @@ export function AdminAuditLog() {
     <div className="space-y-4">
       <EditedTradesReconciliation />
       <PriceModeStressTest />
+      <ModeEventsConsole />
       <Card>
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-3">
