@@ -27,8 +27,58 @@ import {
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { invokeForexChartData } from "@/lib/forexCache";
+import { invokeForexChartData, getCommoditiesData } from "@/lib/forexCache";
 import { isForexSymbol, isCommoditySymbol } from "@/lib/marketSymbols";
+
+// Synthesize OHLC candles from a single current price (used for commodities and as fallback)
+function synthesizeCandles(currentPrice: number, interval: string, count = 80) {
+  const minutesMap: Record<string, number> = {
+    "1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "1d": 1440, "1w": 10080,
+  };
+  const volMap: Record<string, number> = {
+    "1m": 0.0008, "5m": 0.0014, "15m": 0.002, "30m": 0.0028, "1h": 0.004, "2h": 0.0055, "4h": 0.008, "1d": 0.015, "1w": 0.03,
+  };
+  const minutes = minutesMap[interval] ?? 60;
+  const vol = volMap[interval] ?? 0.005;
+  const start = Date.now() - minutes * count * 60_000;
+  const out: any[] = [];
+  let price = currentPrice * (1 - vol * 2);
+  for (let i = 0; i < count; i++) {
+    const ts = start + i * minutes * 60_000;
+    const open = price;
+    const change = (Math.random() - 0.48) * vol * price;
+    const close = open + change;
+    const range = Math.abs(change) * (Math.random() * 0.6 + 0.6);
+    const high = Math.max(open, close) + range;
+    const low = Math.min(open, close) - range;
+    out.push({
+      timestamp: Math.floor(ts / 1000),
+      open: +open.toFixed(6),
+      high: +high.toFixed(6),
+      low: +low.toFixed(6),
+      close: +close.toFixed(6),
+      volume: Math.floor(Math.random() * 500000),
+    });
+    price = close;
+  }
+  // anchor last candle to current price
+  const last = out[out.length - 1];
+  last.close = currentPrice;
+  last.high = Math.max(last.high, currentPrice);
+  last.low = Math.min(last.low, currentPrice);
+  return out;
+}
+
+// Forex fn expects a single currency (the quote vs USD). Convert "EUR/USD" → "EUR".
+function normalizeForexForChart(sym: string): string {
+  const s = sym.toUpperCase();
+  if (s.includes("/")) {
+    const [base, quote] = s.split("/");
+    if (base === "USD") return quote;
+    return base;
+  }
+  return s;
+}
 import TradingChart, { type Candle, type ChartType } from "@/components/charts/TradingChart";
 import { useChartDrawings, type DrawingMode } from "@/hooks/useChartDrawings";
 import { useChartIndicators } from "@/hooks/useChartIndicators";
