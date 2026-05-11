@@ -347,7 +347,7 @@ export default function Charts() {
   const clearAll = () => setDrawings([]);
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-background text-foreground">
+    <div className="flex h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-background text-foreground">
       {/* Header */}
       {!fullscreen && (
         <header className="relative z-50 flex h-14 items-center gap-2 border-b border-border/40 bg-background/80 px-3 backdrop-blur-md">
