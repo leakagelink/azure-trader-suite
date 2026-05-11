@@ -156,6 +156,8 @@ export default function Charts() {
   const [tf, setTf] = useState<Tf>("1h");
   const [candles, setCandles] = useState<Candle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const [mode, setMode] = useState<DrawingMode>("cursor");
   const [color, setColor] = useState("#3b82f6");
   const [magnet, setMagnet] = useState(false);
@@ -268,6 +270,18 @@ export default function Charts() {
         const map = new Map<number, Candle>();
         mapped.forEach((c) => map.set(c.time, c));
         const next = Array.from(map.values()).sort((a, b) => a.time - b.time);
+        if (next.length === 0) {
+          setError(`No price data available for ${symbol}`);
+          setCandles([]);
+          return;
+        }
+        const lastClose = next[next.length - 1]?.close;
+        if (!Number.isFinite(lastClose)) {
+          setError(`Invalid price data for ${symbol}`);
+          setCandles([]);
+          return;
+        }
+        setError(null);
         setCandles((prev) => {
           if (prev.length === next.length && prev.length > 0) {
             const a = prev[prev.length - 1];
@@ -280,7 +294,7 @@ export default function Charts() {
         console.error("Chart load failed:", e);
         if (!cancelled && myReq === reqIdRef.current) {
           setCandles([]);
-          toast.error(`Failed to load chart for ${symbol}`);
+          setError(e?.message || `Failed to load chart for ${symbol}`);
         }
       } finally {
         if (!cancelled && myReq === reqIdRef.current) setLoading(false);
@@ -296,7 +310,7 @@ export default function Charts() {
       clearTimeout(debounce);
       clearInterval(id);
     };
-  }, [symbol, tf]);
+  }, [symbol, tf, retryTick]);
 
   const isCrypto = !isForexSymbol(symbol) && !isCommoditySymbol(symbol);
   const [live, setLive] = useState(false);
@@ -493,6 +507,39 @@ export default function Charts() {
       {/* Chart */}
       <div className="relative flex-1 overflow-hidden">
         <TradingChart symbol={symbol} candles={candles} mode={mode} color={color} magnet={magnet} indicators={indicators} chartType={chartType} alerts={alerts} />
+
+        {/* Loading overlay (only when no data yet) */}
+        {loading && candles.length === 0 && !error && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
+            <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-card/90 px-4 py-2 text-xs font-medium text-muted-foreground shadow-md">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Loading {symbol} {tf.toUpperCase()}…
+            </div>
+          </div>
+        )}
+
+        {/* Empty / error state with Retry */}
+        {!loading && (error || candles.length === 0) && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+            <div className="mx-4 max-w-sm rounded-2xl border border-border/60 bg-card p-5 text-center shadow-xl">
+              <div className="mb-2 text-sm font-semibold text-foreground">
+                {error ? "Chart unavailable" : `No data for ${symbol}`}
+              </div>
+              <p className="mb-4 text-xs text-muted-foreground">
+                {error ?? `We couldn't load price data for ${symbol} on the ${tf.toUpperCase()} timeframe. Please try again.`}
+              </p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setRetryTick((n) => n + 1);
+                }}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
 
         {fullscreen && (
           <button
