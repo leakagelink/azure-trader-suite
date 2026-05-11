@@ -1052,6 +1052,7 @@ const AdminPanel = () => {
                     {/* Active Users */}
                     <div>
                       <h3 className="text-sm font-semibold mb-3 text-green-600">Active Users ({users.filter(u => u.is_approved).length})</h3>
+                      <div className="overflow-x-auto -mx-2 px-2">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -1092,6 +1093,7 @@ const AdminPanel = () => {
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   </div>
                 )}
