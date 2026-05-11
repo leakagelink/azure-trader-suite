@@ -1468,6 +1468,18 @@ export const AdminTradeManagement = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
+                                {position.price_mode === 'edited' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 px-2 border-orange-500/40 text-orange-500 hover:bg-orange-500/10"
+                                    title="Reset to Live feed (only valid path to restart live updates)"
+                                    onClick={() => handleResetToLive(position)}
+                                  >
+                                    <RotateCcw className="h-4 w-4 mr-1" />
+                                    <span className="text-xs">Live</span>
+                                  </Button>
+                                )}
                                 <Button
                                   size="sm"
                                   variant="outline"
