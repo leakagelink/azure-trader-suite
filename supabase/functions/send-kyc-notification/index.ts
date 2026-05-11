@@ -17,7 +17,7 @@ interface KYCNotificationRequest {
 
 const brandHeader = (title: string, gradient: string) => `
   <div style="text-align: center; padding: 30px 20px 20px; background: #ffffff;">
-    <img src="${LOGO_URL}" alt="CoinGoldFX" style="max-width: 180px; height: auto; margin-bottom: 10px;" />
+    <img src="${LOGO_URL}" alt="TradixoFX" style="max-width: 180px; height: auto; margin-bottom: 10px;" />
   </div>
   <div style="background: ${gradient}; padding: 30px; text-align: center;">
     <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 700;">${title}</h1>
@@ -26,9 +26,9 @@ const brandHeader = (title: string, gradient: string) => `
 
 const brandFooter = `
   <div style="background: #1a0a0a; padding: 25px 20px; text-align: center; border-radius: 0 0 12px 12px;">
-    <p style="margin: 0 0 8px; color: #d4a017; font-size: 16px; font-weight: 700; letter-spacing: 1px;">CoinGoldFX</p>
+    <p style="margin: 0 0 8px; color: #d4a017; font-size: 16px; font-weight: 700; letter-spacing: 1px;">TradixoFX</p>
     <p style="margin: 0; color: #a89070; font-size: 12px;">Trade Smart. Trade Gold.</p>
-    <p style="margin: 12px 0 0; color: #6b5544; font-size: 11px;">© ${new Date().getFullYear()} CoinGoldFX. All rights reserved.</p>
+    <p style="margin: 12px 0 0; color: #6b5544; font-size: 11px;">© ${new Date().getFullYear()} TradixoFX. All rights reserved.</p>
   </div>
 `;
 
@@ -55,8 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
     const isApproved = status === "approved";
     
     const subject = isApproved 
-      ? "✅ Your CoinGoldFX KYC is Approved!" 
-      : "CoinGoldFX KYC Verification Update";
+      ? "✅ Your TradixoFX KYC is Approved!" 
+      : "TradixoFX KYC Verification Update";
 
     const htmlContent = isApproved 
       ? `
@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
               <li>Premium customer support</li>
             </ul>
             <div style="text-align: center; margin: 30px 0 10px;">
-              <a href="https://coingoldfx.com" style="display: inline-block; background: linear-gradient(135deg, #d4a017, #b8860b); color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: 700;">Start Trading</a>
+              <a href="https://tradixofx.com" style="display: inline-block; background: linear-gradient(135deg, #d4a017, #b8860b); color: #ffffff; padding: 12px 32px; text-decoration: none; border-radius: 6px; font-weight: 700;">Start Trading</a>
             </div>
           </div>
           ${brandFooter}
@@ -122,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "CoinGoldFX <noreply@coingoldfx.com>",
+        from: "TradixoFX <noreply@tradixofx.com>",
         to: [email],
         subject: subject,
         html: htmlContent,

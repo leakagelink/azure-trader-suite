@@ -132,14 +132,14 @@ export function AdminSidebar({
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-full blur-md opacity-50 animate-pulse" />
             <img
               src={logo}
-              alt="CoinGoldFX"
+              alt="TradixoFX"
               className="relative h-9 w-9 object-contain rounded-full ring-2 ring-primary/30"
             />
           </div>
           {!collapsed && (
             <div className="flex flex-col animate-fade-in min-w-0">
               <span className="text-sm font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">
-                CoinGoldFX
+                TradixoFX
               </span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                 Broker Panel

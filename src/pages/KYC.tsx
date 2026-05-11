@@ -217,7 +217,7 @@ const KYC = () => {
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
           <div className="flex items-center gap-2">
-            <img src={logo} alt="CoinGoldFX" className="h-8 w-auto object-contain" />
+            <img src={logo} alt="TradixoFX" className="h-8 w-auto object-contain" />
             <span className="text-sm font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               KYC Verification
             </span>
