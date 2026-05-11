@@ -201,12 +201,38 @@ export default function Charts() {
     const load = async () => {
       setLoading(true);
       try {
-        const isForex = isForexSymbol(symbol);
-        const { data, error } = isForex
-          ? await invokeForexChartData(symbol.toUpperCase(), tf)
-          : await supabase.functions.invoke("fetch-taapi-data", {
-              body: { symbol: symbol.toUpperCase(), interval: tf },
-            });
+        const upper = symbol.toUpperCase();
+        const isForex = isForexSymbol(upper);
+        const isCommodity = isCommoditySymbol(upper);
+        let data: any = null;
+        let error: any = null;
+
+        if (isCommodity) {
+          // No dedicated commodity-chart endpoint — use snapshot price + synthesize OHLC.
+          try {
+            const snap = await getCommoditiesData();
+            const row = (snap?.commoditiesData || []).find(
+              (c: any) => c.symbol?.toUpperCase() === upper,
+            );
+            const price = row ? parseFloat(row.price) : NaN;
+            if (!Number.isFinite(price)) throw new Error("No commodity price");
+            data = { candles: synthesizeCandles(price, tf) };
+          } catch (e) {
+            error = e;
+          }
+        } else if (isForex) {
+          const forexSym = normalizeForexForChart(upper);
+          const res = await invokeForexChartData(forexSym, tf);
+          data = res.data;
+          error = res.error;
+        } else {
+          const res = await supabase.functions.invoke("fetch-taapi-data", {
+            body: { symbol: upper, interval: tf },
+          });
+          data = res.data;
+          error = res.error;
+        }
+
         if (error) throw error;
         if (cancelled) return;
         const raw = (data?.candles || []) as any[];
@@ -218,13 +244,15 @@ export default function Charts() {
           close: Number(k.close),
           volume: Number(k.volume ?? 0),
         })).filter((k) => Number.isFinite(k.open) && k.time > 0);
-        // dedupe & sort
         const map = new Map<number, Candle>();
         mapped.forEach((c) => map.set(c.time, c));
         setCandles(Array.from(map.values()).sort((a, b) => a.time - b.time));
       } catch (e: any) {
-        console.error(e);
-        toast.error("Failed to load chart data");
+        console.error("Chart load failed:", e);
+        if (!cancelled) {
+          setCandles([]);
+          toast.error(`Failed to load chart for ${symbol}`);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
