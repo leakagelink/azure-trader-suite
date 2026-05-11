@@ -114,6 +114,9 @@ const AdminPositions = () => {
               }, 500);
             }
             previousPricesRef.current[position.id] = position.current_price;
+            modeLogger.debug("AdminPositions.tsx/livefeed", "db_skip",
+              `Skipped admin live write — row in edited mode (cron drives it)`,
+              { position_id: position.id, symbol: position.symbol, price_mode: "edited" });
             return { ...position };
           }
 
