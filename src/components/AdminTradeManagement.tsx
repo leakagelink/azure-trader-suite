@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { isCommoditySymbol, isForexSymbol } from "@/lib/marketSymbols";
+import { modeLogger } from "@/lib/modeEventLogger";
 
 interface User {
   id: string;
@@ -985,6 +986,7 @@ export const AdminTradeManagement = () => {
         ? (direction === 'up' ? newCurrentPrice * (1 + driftPct) : newCurrentPrice * (1 - driftPct))
         : null;
 
+      const previousMode = selectedPosition.price_mode ?? "live";
       const { error } = await supabase
         .from('positions')
         .update({
@@ -1001,7 +1003,24 @@ export const AdminTradeManagement = () => {
         } as any)
         .eq('id', selectedPosition.id);
 
-      if (error) throw error;
+      if (error) {
+        modeLogger.error("AdminTradeManagement.handleEditTrade", "db_update",
+          `Edit trade failed: ${error.message}`,
+          { position_id: selectedPosition.id, symbol: selectedPosition.symbol, price_mode: newPriceMode });
+        throw error;
+      }
+
+      if (previousMode !== newPriceMode) {
+        modeLogger.warn("AdminTradeManagement.handleEditTrade", "mode_transition",
+          `${selectedPosition.symbol} ${previousMode} → ${newPriceMode}`,
+          { position_id: selectedPosition.id, symbol: selectedPosition.symbol, price_mode: newPriceMode,
+            data: { from: previousMode, to: newPriceMode, current_price: newCurrentPrice, pnl: newPnl } });
+      } else {
+        modeLogger.info("AdminTradeManagement.handleEditTrade", "db_update",
+          `Edited trade saved (${newPriceMode})`,
+          { position_id: selectedPosition.id, symbol: selectedPosition.symbol, price_mode: newPriceMode,
+            data: { current_price: newCurrentPrice, pnl: newPnl, momentum_target: momentumTarget } });
+      }
 
       toast.success("Trade updated successfully");
       setEditTradeDialog(false);
@@ -1094,12 +1113,24 @@ export const AdminTradeManagement = () => {
         .eq('status', 'open')
         .eq('price_mode', 'edited'); // guard: prevents racing with concurrent toggles
 
-      if (error) throw error;
+      if (error) {
+        modeLogger.error("AdminTradeManagement.handleResetToLive", "reset_to_live",
+          `Reset failed: ${error.message}`,
+          { position_id: position.id, symbol: position.symbol, price_mode: "edited" });
+        throw error;
+      }
       if (!count) {
+        modeLogger.warn("AdminTradeManagement.handleResetToLive", "db_guard_block",
+          `Reset blocked — row was no longer in edited mode`,
+          { position_id: position.id, symbol: position.symbol, price_mode: position.price_mode });
         toast.error("Trade is no longer in Edited mode — refresh the table");
         fetchPositions();
         return;
       }
+      modeLogger.info("AdminTradeManagement.handleResetToLive", "mode_transition",
+        `${position.symbol} edited → live (manual reset)`,
+        { position_id: position.id, symbol: position.symbol, price_mode: "live",
+          data: { from: "edited", to: "live" } });
       toast.success(`${position.symbol} reset to LIVE feed`);
       fetchPositions();
     } catch (err: any) {

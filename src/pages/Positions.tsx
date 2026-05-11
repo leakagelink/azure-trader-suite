@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import BottomNav from "@/components/BottomNav";
 import { isCommoditySymbol, isForexSymbol } from "@/lib/marketSymbols";
+import { modeLogger } from "@/lib/modeEventLogger";
 
 interface Position {
   id: string;
@@ -341,13 +342,31 @@ const Positions = () => {
                 current_price: currentPrice,
                 pnl,
                 updated_at: new Date().toISOString(),
-              })
+              }, { count: "exact" } as any)
               .eq("id", position.id)
               .eq("status", "open")
               .neq("price_mode", "edited")
-              .then(({ error }) => {
-                if (error) console.error("Error updating position:", error);
+              .then(({ error, count }) => {
+                if (error) {
+                  modeLogger.error("Positions.tsx/livefeed", "db_update",
+                    `Live price write failed: ${error.message}`,
+                    { position_id: position.id, symbol: position.symbol, price_mode: position.price_mode });
+                  console.error("Error updating position:", error);
+                } else if (count === 0) {
+                  modeLogger.warn("Positions.tsx/livefeed", "db_guard_block",
+                    `Live write blocked by guard (row likely flipped to edited)`,
+                    { position_id: position.id, symbol: position.symbol, price_mode: position.price_mode });
+                } else {
+                  modeLogger.debug("Positions.tsx/livefeed", "db_update",
+                    `Live price tick written`,
+                    { position_id: position.id, symbol: position.symbol, price_mode: "live",
+                      data: { current_price: currentPrice, pnl } });
+                }
               });
+          } else {
+            modeLogger.debug("Positions.tsx/livefeed", "db_skip",
+              `Skipped live write — row is in edited mode`,
+              { position_id: position.id, symbol: position.symbol, price_mode: "edited" });
           }
 
           return {
@@ -429,6 +448,19 @@ const Positions = () => {
         },
         (payload) => {
           const updatedPosition = payload.new as Position;
+          const oldPosition = payload.old as Partial<Position> | undefined;
+          modeLogger.info("Positions.tsx/realtime", "realtime_in",
+            `Realtime UPDATE for ${updatedPosition.symbol} (status=${updatedPosition.status}, mode=${updatedPosition.price_mode})`,
+            { position_id: updatedPosition.id, symbol: updatedPosition.symbol, price_mode: updatedPosition.price_mode,
+              data: { status: updatedPosition.status, current_price: updatedPosition.current_price, pnl: updatedPosition.pnl } });
+
+          if (oldPosition?.price_mode && oldPosition.price_mode !== updatedPosition.price_mode) {
+            modeLogger.warn("Positions.tsx/realtime", "mode_transition",
+              `${updatedPosition.symbol} ${oldPosition.price_mode} → ${updatedPosition.price_mode}`,
+              { position_id: updatedPosition.id, symbol: updatedPosition.symbol, price_mode: updatedPosition.price_mode,
+                data: { from: oldPosition.price_mode, to: updatedPosition.price_mode } });
+          }
+
           console.log('Position updated via realtime:', updatedPosition.id, 'status:', updatedPosition.status, 'price_mode:', updatedPosition.price_mode);
           
           // If position was closed, move it from open to closed

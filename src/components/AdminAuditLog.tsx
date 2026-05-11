@@ -10,6 +10,7 @@ import { History, RefreshCw, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { EditedTradesReconciliation } from "./EditedTradesReconciliation";
 import { PriceModeStressTest } from "./PriceModeStressTest";
+import { ModeEventsConsole } from "./ModeEventsConsole";
 
 interface AuditEntry {
   id: string;
@@ -145,6 +146,7 @@ export function AdminAuditLog() {
     <div className="space-y-4">
       <EditedTradesReconciliation />
       <PriceModeStressTest />
+      <ModeEventsConsole />
       <Card>
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-3">
