@@ -1113,12 +1113,24 @@ export const AdminTradeManagement = () => {
         .eq('status', 'open')
         .eq('price_mode', 'edited'); // guard: prevents racing with concurrent toggles
 
-      if (error) throw error;
+      if (error) {
+        modeLogger.error("AdminTradeManagement.handleResetToLive", "reset_to_live",
+          `Reset failed: ${error.message}`,
+          { position_id: position.id, symbol: position.symbol, price_mode: "edited" });
+        throw error;
+      }
       if (!count) {
+        modeLogger.warn("AdminTradeManagement.handleResetToLive", "db_guard_block",
+          `Reset blocked — row was no longer in edited mode`,
+          { position_id: position.id, symbol: position.symbol, price_mode: position.price_mode });
         toast.error("Trade is no longer in Edited mode — refresh the table");
         fetchPositions();
         return;
       }
+      modeLogger.info("AdminTradeManagement.handleResetToLive", "mode_transition",
+        `${position.symbol} edited → live (manual reset)`,
+        { position_id: position.id, symbol: position.symbol, price_mode: "live",
+          data: { from: "edited", to: "live" } });
       toast.success(`${position.symbol} reset to LIVE feed`);
       fetchPositions();
     } catch (err: any) {
