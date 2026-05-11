@@ -448,6 +448,19 @@ const Positions = () => {
         },
         (payload) => {
           const updatedPosition = payload.new as Position;
+          const oldPosition = payload.old as Partial<Position> | undefined;
+          modeLogger.info("Positions.tsx/realtime", "realtime_in",
+            `Realtime UPDATE for ${updatedPosition.symbol} (status=${updatedPosition.status}, mode=${updatedPosition.price_mode})`,
+            { position_id: updatedPosition.id, symbol: updatedPosition.symbol, price_mode: updatedPosition.price_mode,
+              data: { status: updatedPosition.status, current_price: updatedPosition.current_price, pnl: updatedPosition.pnl } });
+
+          if (oldPosition?.price_mode && oldPosition.price_mode !== updatedPosition.price_mode) {
+            modeLogger.warn("Positions.tsx/realtime", "mode_transition",
+              `${updatedPosition.symbol} ${oldPosition.price_mode} → ${updatedPosition.price_mode}`,
+              { position_id: updatedPosition.id, symbol: updatedPosition.symbol, price_mode: updatedPosition.price_mode,
+                data: { from: oldPosition.price_mode, to: updatedPosition.price_mode } });
+          }
+
           console.log('Position updated via realtime:', updatedPosition.id, 'status:', updatedPosition.status, 'price_mode:', updatedPosition.price_mode);
           
           // If position was closed, move it from open to closed
