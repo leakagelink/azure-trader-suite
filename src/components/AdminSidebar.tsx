@@ -44,6 +44,7 @@ const operationsItems = [
   { id: "trades", title: "Trades", icon: TrendingUp },
   { id: "signals", title: "Signals", icon: Zap },
   { id: "kyc", title: "KYC", icon: FileText, badgeKey: "kyc" },
+  { id: "audit", title: "Audit Log", icon: History },
 ];
 
 const transactionsItems = [
