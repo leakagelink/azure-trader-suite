@@ -145,47 +145,35 @@ All colors MUST be HSL.
     @apply backdrop-blur-xl bg-black/10 border border-white/10;
   }
 
-  /* Shimmer effect */
+  /* Shimmer effect (flat, no gradient) */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(var(--primary) / 0.1) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
+    background: hsl(var(--primary) / 0.08);
   }
 
-  /* Gradient text */
+  /* Solid accent text (was gradient) */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
-    background-size: 200% auto;
-    animation: gradient-x 3s ease infinite;
+    color: hsl(var(--accent));
+    background: none;
+    -webkit-text-fill-color: currentColor;
   }
 
-  /* Metallic royal blue text - premium accent */
   .gold-text {
-    background: linear-gradient(135deg, hsl(215 90% 80%), hsl(222 88% 65%), hsl(225 85% 58%), hsl(215 95% 82%));
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gradient-x 4s ease infinite;
-    filter: drop-shadow(0 0 24px hsl(215 90% 70% / 0.4));
+    color: hsl(var(--accent));
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    filter: none;
   }
 
   .emerald-text {
-    background: linear-gradient(135deg, hsl(215 90% 80%), hsl(222 85% 60%));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: hsl(var(--accent));
+    background: none;
+    -webkit-text-fill-color: currentColor;
   }
 
-  /* Glass card - premium slate-tinted */
+  /* Glass card - flat slate */
   .glass-card {
     @apply backdrop-blur-2xl border;
-    background: linear-gradient(135deg, hsl(220 14% 18% / 0.6), hsl(220 16% 10% / 0.4));
+    background: hsl(220 14% 16% / 0.85);
     border-color: hsl(215 90% 70% / 0.14);
     box-shadow: 0 8px 32px -8px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(215 90% 70% / 0.08);
   }
@@ -195,10 +183,10 @@ All colors MUST be HSL.
     box-shadow: 0 12px 40px -8px hsl(222 85% 58% / 0.30), inset 0 1px 0 hsl(215 90% 70% / 0.18);
   }
 
-  /* Section divider with gradient line */
+  /* Section divider — flat */
   .divider-gold {
     height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.5), transparent);
+    background: hsl(var(--border));
   }
 
   /* Glow effect */
