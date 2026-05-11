@@ -190,11 +190,24 @@ export default function Charts() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return POPULAR;
-    return POPULAR.filter(
-      (s) => s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
-    ).slice(0, 60);
-  }, [query]);
+    const base = q
+      ? POPULAR.filter(
+          (s) => s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q),
+        )
+      : POPULAR;
+    // Ensure currently selected symbol is always present in the list
+    const upper = symbol.toUpperCase();
+    const hasCurrent = base.some((s) => s.symbol.toUpperCase() === upper);
+    if (!hasCurrent && upper) {
+      const market = isCommoditySymbol(upper)
+        ? "Commodity"
+        : isForexSymbol(upper)
+        ? "Forex"
+        : "Crypto";
+      return [{ symbol: upper, name: upper, market }, ...base].slice(0, 60);
+    }
+    return base.slice(0, 60);
+  }, [query, symbol]);
 
   useEffect(() => {
     let cancelled = false;
@@ -334,15 +347,19 @@ export default function Charts() {
                     />
                   </div>
                   <div className="max-h-80 overflow-y-auto p-1">
-                    {filtered.map((s) => (
+                    {filtered.map((s) => {
+                      const isActive = s.symbol.toUpperCase() === symbol.toUpperCase();
+                      return (
                       <button
                         key={s.symbol}
                         onClick={() => {
-                          setSymbol(s.symbol);
+                          setSymbol(s.symbol.toUpperCase());
                           setSearchOpen(false);
                           setQuery("");
                         }}
-                        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-muted/50"
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-muted/50 ${
+                          isActive ? "bg-primary/10 text-primary" : ""
+                        }`}
                       >
                         <div>
                           <div className="font-semibold">{s.symbol}</div>
@@ -352,7 +369,8 @@ export default function Charts() {
                           {s.market}
                         </span>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </>
