@@ -78,7 +78,7 @@ const AdminPositions = () => {
       try {
         // Batch fetch all live market prices
         const liveSymbols = positions
-          .filter(p => p.price_mode !== 'manual')
+          .filter(p => p.price_mode !== 'manual' && p.price_mode !== 'edited')
           .map(p => p.symbol);
 
         let livePricesMap: Record<string, number> = {};
@@ -102,6 +102,20 @@ const AdminPositions = () => {
         }
 
         const updatedPositions = positions.map((position) => {
+          // Edited trades: server cron drives current_price/pnl via realtime. Do NOT touch.
+          if (position.price_mode === 'edited') {
+            const previousPrice = previousPricesRef.current[position.id];
+            if (previousPrice !== undefined && previousPrice !== position.current_price) {
+              const direction = position.current_price > previousPrice ? 'up' : 'down';
+              setPriceChanges(prev => ({ ...prev, [position.id]: { direction, flash: true } }));
+              setTimeout(() => {
+                setPriceChanges(prev => ({ ...prev, [position.id]: { ...prev[position.id], flash: false } }));
+              }, 500);
+            }
+            previousPricesRef.current[position.id] = position.current_price;
+            return { ...position };
+          }
+
           let currentPrice = position.current_price;
 
           // Check if this is a manual trade
@@ -123,7 +137,7 @@ const AdminPositions = () => {
             ? (currentPrice - position.entry_price) * quantity
             : (position.entry_price - currentPrice) * quantity;
 
-          // Update database in background (non-blocking)
+          // Update database in background (non-blocking) — only for live/manual
           supabase
             .from('positions')
             .update({ 
@@ -133,6 +147,7 @@ const AdminPositions = () => {
             })
             .eq('id', position.id)
             .eq('status', 'open')
+            .eq('price_mode', position.price_mode as any)
             .then(({ error }) => {
               if (error) console.error('Error updating position:', error);
             });
