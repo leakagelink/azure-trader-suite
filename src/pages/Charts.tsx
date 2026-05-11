@@ -347,7 +347,7 @@ export default function Charts() {
   const clearAll = () => setDrawings([]);
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-background text-foreground">
+    <div className="flex h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-background text-foreground">
       {/* Header */}
       {!fullscreen && (
         <header className="relative z-50 flex h-14 items-center gap-2 border-b border-border/40 bg-background/80 px-3 backdrop-blur-md">
@@ -505,7 +505,7 @@ export default function Charts() {
       )}
 
       {/* Chart */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative w-full min-w-0 flex-1 overflow-hidden">
         <TradingChart symbol={symbol} candles={candles} mode={mode} color={color} magnet={magnet} indicators={indicators} chartType={chartType} alerts={alerts} />
 
         {/* Loading overlay (only when no data yet) */}
