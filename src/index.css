@@ -8,102 +8,101 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Navy Blue + White theme — clean professional fintech */
-    --background: 220 65% 8%;
+    /* Midnight Navy + Electric Cyan — Robinhood/Coinbase style */
+    --background: 220 40% 6%;
     --foreground: 0 0% 100%;
 
-    --card: 220 55% 12%;
+    --card: 220 38% 10%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 220 60% 10%;
+    --popover: 220 40% 8%;
     --popover-foreground: 0 0% 100%;
 
-    /* Navy blue primary */
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    /* Electric cyan primary */
+    --primary: 190 95% 55%;
+    --primary-foreground: 220 50% 8%;
 
-    /* Deep navy bridge */
-    --secondary: 220 50% 20%;
+    --secondary: 220 35% 18%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 40% 16%;
+    --muted: 220 30% 14%;
     --muted-foreground: 215 20% 75%;
 
-    /* Bright sky-blue accent */
-    --accent: 210 100% 70%;
-    --accent-foreground: 220 65% 10%;
+    /* Bright cyan accent */
+    --accent: 200 100% 70%;
+    --accent-foreground: 220 50% 8%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 75% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 45%;
-    --warning: 38 95% 55%;
+    --success: 152 76% 48%;
+    --warning: 38 95% 58%;
 
-    --border: 220 40% 22%;
-    --input: 220 40% 18%;
-    --ring: 217 91% 60%;
+    --border: 220 30% 20%;
+    --input: 220 30% 16%;
+    --ring: 190 95% 55%;
 
     --radius: 1rem;
 
-    /* Premium Navy Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(220 70% 40%));
-    --gradient-accent: linear-gradient(135deg, hsl(210 100% 70%), hsl(217 91% 60%));
-    --gradient-hero: linear-gradient(135deg, hsl(220 70% 8%) 0%, hsl(220 60% 18%) 45%, hsl(217 91% 50%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(210 100% 75%), hsl(217 91% 65%), hsl(220 90% 60%));
-    --gradient-radial: radial-gradient(ellipse at top, hsl(217 91% 60% / 0.20), transparent 60%);
+    /* Cyan glow gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(190 95% 55%), hsl(200 100% 45%));
+    --gradient-accent: linear-gradient(135deg, hsl(200 100% 70%), hsl(190 95% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 50% 6%) 0%, hsl(220 45% 14%) 45%, hsl(190 95% 45%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(200 100% 75%), hsl(190 95% 60%), hsl(195 100% 55%));
+    --gradient-radial: radial-gradient(ellipse at top, hsl(190 95% 55% / 0.22), transparent 60%);
 
-    /* Refined Shadows with navy glow */
-    --shadow-card: 0 4px 14px -2px hsl(217 91% 60% / 0.15), 0 2px 6px -2px hsl(0 0% 0% / 0.40);
-    --shadow-elevated: 0 18px 40px -10px hsl(217 91% 60% / 0.30), 0 8px 16px -6px hsl(210 100% 70% / 0.20);
-    --shadow-glow: 0 0 50px hsl(210 100% 70% / 0.45);
+    /* Cyan glow shadows */
+    --shadow-card: 0 4px 14px -2px hsl(190 95% 55% / 0.15), 0 2px 6px -2px hsl(0 0% 0% / 0.45);
+    --shadow-elevated: 0 18px 40px -10px hsl(190 95% 55% / 0.30), 0 8px 16px -6px hsl(200 100% 70% / 0.20);
+    --shadow-glow: 0 0 50px hsl(200 100% 70% / 0.45);
 
-    --sidebar-background: 220 70% 6%;
+    --sidebar-background: 220 45% 5%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 50% 14%;
-    --sidebar-accent-foreground: 210 100% 75%;
-    --sidebar-border: 220 40% 18%;
-    --sidebar-ring: 210 100% 70%;
+    --sidebar-primary: 190 95% 55%;
+    --sidebar-primary-foreground: 220 50% 8%;
+    --sidebar-accent: 220 35% 12%;
+    --sidebar-accent-foreground: 200 100% 75%;
+    --sidebar-border: 220 30% 16%;
+    --sidebar-ring: 200 100% 70%;
   }
 
   .dark {
-    --background: 220 70% 6%;
+    --background: 220 45% 5%;
     --foreground: 0 0% 100%;
 
-    --card: 220 60% 10%;
+    --card: 220 40% 9%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 220 65% 8%;
+    --popover: 220 42% 7%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 217 95% 65%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 190 95% 58%;
+    --primary-foreground: 220 50% 8%;
 
-    --secondary: 220 50% 22%;
+    --secondary: 220 35% 20%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 40% 14%;
+    --muted: 220 30% 13%;
     --muted-foreground: 215 20% 78%;
 
-    --accent: 210 100% 72%;
-    --accent-foreground: 220 65% 10%;
+    --accent: 200 100% 72%;
+    --accent-foreground: 220 50% 8%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 75% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 40% 20%;
-    --input: 220 40% 16%;
-    --ring: 210 100% 72%;
+    --border: 220 30% 18%;
+    --input: 220 30% 14%;
+    --ring: 200 100% 72%;
 
-    --sidebar-background: 220 75% 5%;
+    --sidebar-background: 220 50% 4%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 217 95% 65%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 50% 12%;
-    --sidebar-accent-foreground: 210 100% 75%;
-    --sidebar-border: 220 40% 16%;
-    --sidebar-ring: 210 100% 72%;
+    --sidebar-primary: 190 95% 58%;
+    --sidebar-primary-foreground: 220 50% 8%;
+    --sidebar-accent: 220 35% 11%;
+    --sidebar-accent-foreground: 200 100% 75%;
+    --sidebar-border: 220 30% 14%;
+    --sidebar-ring: 200 100% 72%;
   }
 }
 
