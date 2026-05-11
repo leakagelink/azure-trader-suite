@@ -928,7 +928,12 @@ export const AdminTradeManagement = () => {
     }
 
     try {
-      const newEntryPrice = parseFloat(entryPrice);
+      // Guardrail: entry_price is locked while trade is in 'edited' mode.
+      // Always use the stored entry_price for edited trades regardless of input.
+      const isEditedLocked = selectedPosition.price_mode === 'edited';
+      const newEntryPrice = isEditedLocked
+        ? selectedPosition.entry_price
+        : parseFloat(entryPrice);
       const newAmount = parseFloat(amount);
       const newMargin = (newAmount * newEntryPrice) / selectedPosition.leverage;
 
