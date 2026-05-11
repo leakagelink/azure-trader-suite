@@ -132,8 +132,8 @@ const KYC = () => {
       }
       setStep((s) => Math.min(4, s + 1));
     } catch (err: any) {
-      const msg = err?.errors?.[0]?.message || "Please complete all required fields";
-      toast({ title: "Missing info", description: msg, variant: "destructive" });
+      const msg = err?.errors?.[0]?.message || t("kyc.toast.missingInfoFallback");
+      toast({ title: t("kyc.toast.missingInfoTitle"), description: msg, variant: "destructive" });
     }
   };
 
