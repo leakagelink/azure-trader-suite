@@ -174,7 +174,7 @@ const KYC = () => {
       });
       if (insertErr) throw insertErr;
 
-      toast({ title: "KYC submitted!", description: "Aapki KYC review ke liye broker ke paas chali gayi hai." });
+      toast({ title: "KYC submitted!", description: "Your KYC has been sent to the broker for review." });
       setExisting({
         status: "pending",
         rejection_reason: null,
@@ -254,12 +254,12 @@ const KYC = () => {
             <CardContent className="space-y-3">
               {existing.status === "pending" && (
                 <p className="text-sm text-muted-foreground">
-                  Aapki KYC submit ho chuki hai. Broker review karke aapko email pe inform karenge. Yeh process 24-48 hours le sakta hai.
+                  Your KYC has been submitted. The broker will review it and notify you by email. This process can take 24–48 hours.
                 </p>
               )}
               {existing.status === "approved" && (
                 <p className="text-sm text-muted-foreground">
-                  Badhai! Aapki KYC verified ho chuki hai. Ab aap saare features istemaal kar sakte hain.
+                  Congratulations! Your KYC is verified. You can now use all features.
                 </p>
               )}
               {existing.status === "rejected" && (
