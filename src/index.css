@@ -44,12 +44,12 @@ All colors MUST be HSL.
 
     --radius: 1rem;
 
-    /* Royal blue gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(222 85% 58%), hsl(225 75% 45%));
-    --gradient-accent: linear-gradient(135deg, hsl(215 90% 70%), hsl(222 85% 58%));
-    --gradient-hero: linear-gradient(135deg, hsl(220 15% 10%) 0%, hsl(220 14% 18%) 45%, hsl(222 75% 45%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(215 90% 75%), hsl(222 85% 60%), hsl(225 80% 55%));
-    --gradient-radial: radial-gradient(ellipse at top, hsl(222 85% 58% / 0.22), transparent 60%);
+    /* Flat fills (no gradients) */
+    --gradient-primary: hsl(222 85% 58%);
+    --gradient-accent: hsl(215 90% 70%);
+    --gradient-hero: hsl(220 15% 12%);
+    --gradient-gold: hsl(222 85% 58%);
+    --gradient-radial: transparent;
 
     /* Royal blue glow shadows */
     --shadow-card: 0 4px 14px -2px hsl(222 85% 58% / 0.15), 0 2px 6px -2px hsl(0 0% 0% / 0.45);
