@@ -894,7 +894,7 @@ const AdminPanel = () => {
   const pendingWithdrawalsCount = withdrawalRequests.filter((w: any) => w.status === "pending").length;
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={typeof window !== "undefined" ? window.innerWidth >= 1024 : true}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-primary/5">
         {/* Decorative animated background orbs */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
