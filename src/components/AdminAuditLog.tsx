@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { History, RefreshCw, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
+import { EditedTradesReconciliation } from "./EditedTradesReconciliation";
 
 interface AuditEntry {
   id: string;
