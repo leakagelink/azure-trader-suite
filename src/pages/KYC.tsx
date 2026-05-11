@@ -28,12 +28,12 @@ interface ExistingKyc {
   last_name: string;
 }
 
-const STEPS = [
-  { id: 1, title: "Personal Info", icon: UserIcon },
-  { id: 2, title: "Address", icon: MapPin },
-  { id: 3, title: "Occupation", icon: Briefcase },
-  { id: 4, title: "Document", icon: FileCheck2 },
-];
+const STEP_KEYS = [
+  { id: 1, key: "personal", icon: UserIcon },
+  { id: 2, key: "address", icon: MapPin },
+  { id: 3, key: "occupation", icon: Briefcase },
+  { id: 4, key: "document", icon: FileCheck2 },
+] as const;
 
 const personalSchema = z.object({
   first_name: z.string().trim().min(1, "First name required").max(60),
