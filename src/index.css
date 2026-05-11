@@ -149,23 +149,18 @@ All colors MUST be HSL.
     border-color: hsl(220 18% 88%);
   }
 
-  /* Shimmer effect - subtle */
+  /* Shimmer disabled - flat matte */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(var(--primary) / 0.06) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
+    background: transparent;
+    animation: none;
   }
 
-  /* Gradient text - matte navy */
+  /* Gradient text - flat solid navy */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
-    background-size: 200% auto;
-    animation: gradient-x 3s ease infinite;
+    color: hsl(var(--primary));
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    animation: none;
   }
 
   /* Solid navy text - matte */
