@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { isCommoditySymbol, isForexSymbol } from "@/lib/marketSymbols";
+import { modeLogger } from "@/lib/modeEventLogger";
 
 interface User {
   id: string;
