@@ -1928,9 +1928,49 @@ export const AdminTradeManagement = () => {
       <Dialog open={editTradeDialog} onOpenChange={setEditTradeDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Trade</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              Edit Trade
+              {selectedPosition?.price_mode === 'edited' && (
+                <Badge className="bg-orange-500/20 text-orange-500 border-orange-500/30">Edited</Badge>
+              )}
+              {selectedPosition?.price_mode === 'manual' && (
+                <Badge className="bg-purple-500/20 text-purple-500 border-purple-500/30">Manual</Badge>
+              )}
+              {selectedPosition?.price_mode === 'live' && (
+                <Badge className="bg-green-500/20 text-green-500 border-green-500/30">Live</Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {selectedPosition?.price_mode === 'edited' && (
+              <div className="rounded-md border border-orange-500/40 bg-orange-500/10 p-3 space-y-2">
+                <div className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 text-orange-500 shrink-0" />
+                  <div>
+                    <div className="font-semibold text-orange-500">Live feed is paused</div>
+                    <div className="text-xs text-muted-foreground">
+                      This trade is on controlled drift. Entry price is locked. To resume live market price,
+                      use the button below — that's the only safe way to restart the live feed.
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-orange-500/40 text-orange-500 hover:bg-orange-500/20 w-full"
+                  onClick={() => {
+                    if (selectedPosition) {
+                      setEditTradeDialog(false);
+                      handleResetToLive(selectedPosition);
+                    }
+                  }}
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset to Live feed
+                </Button>
+              </div>
+            )}
+
             <div>
               <Label>Amount</Label>
               <Input
@@ -1939,13 +1979,24 @@ export const AdminTradeManagement = () => {
                 onChange={(e) => setAmount(e.target.value)}
               />
             </div>
-             <div>
-              <Label>Entry Price</Label>
+            <div>
+              <Label className="flex items-center gap-1">
+                Entry Price
+                {selectedPosition?.price_mode === 'edited' && (
+                  <Lock className="h-3 w-3 text-muted-foreground" />
+                )}
+              </Label>
               <Input
                 type="number"
                 value={entryPrice}
                 onChange={(e) => setEntryPrice(e.target.value)}
+                disabled={selectedPosition?.price_mode === 'edited'}
               />
+              {selectedPosition?.price_mode === 'edited' && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Locked while in Edited mode — reset to Live first to change.
+                </p>
+              )}
             </div>
             <div>
               <Label>Current Price</Label>
@@ -1956,7 +2007,8 @@ export const AdminTradeManagement = () => {
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Note: You can edit current price independently from entry price to control PnL display.
+              Note: Editing current price keeps the trade in Edited mode and triggers controlled drift.
+              Entry price changes are blocked on Edited trades to preserve PnL math integrity.
             </p>
           </div>
           <DialogFooter>
