@@ -53,8 +53,8 @@ const Settings = () => {
   );
 
   return (
-    <PageShell title="Settings" subtitle="Manage your preferences and security" icon={SettingsIcon} maxWidth="2xl">
-      <div className="space-y-5 sm:space-y-6">
+    <PageShell title="Settings" subtitle="Manage your preferences and security" icon={SettingsIcon} maxWidth="4xl">
+      <div className="space-y-5 sm:space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
         <SectionCard icon={Bell} title="Notifications">
           <SettingRow id="email-notif" label="Email Notifications" description="Receive updates via email" defaultChecked />
           <SettingRow id="trade-alerts" label="Trade Alerts" description="Get notified about trade executions" defaultChecked />
@@ -100,7 +100,7 @@ const Settings = () => {
 
         <Button
           onClick={handleSave}
-          className="w-full h-12 bg-gradient-to-r from-primary via-secondary to-accent hover:opacity-95 text-primary-foreground font-semibold rounded-xl shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] hover:shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.6)] transition-all duration-300"
+          className="w-full h-12 bg-gradient-to-r from-primary via-secondary to-accent hover:opacity-95 text-primary-foreground font-semibold rounded-xl shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] hover:shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.6)] transition-all duration-300 lg:col-span-2"
         >
           Save All Settings
         </Button>

@@ -120,8 +120,8 @@ const Profile = () => {
   }
 
   return (
-    <PageShell title="My Profile" subtitle="Manage your account information" icon={User} maxWidth="2xl">
-      {/* Client ID Card */}
+    <PageShell title="My Profile" subtitle="Manage your account information" icon={User} maxWidth="wide">
+      {/* Client ID Card - full width banner */}
       {profile?.client_id && (
         <Card className={`${glassCardClass} p-4 mb-5 group hover:scale-[1.01] transition-all duration-300`}>
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10" />
@@ -154,6 +154,9 @@ const Profile = () => {
         </Card>
       )}
 
+      {/* Pro 2-column desktop layout */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-6 xl:gap-8">
+        <div>
       <Card className={`${glassCardClass} p-5 sm:p-6 mb-5`}>
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
         <div className="relative flex items-center gap-4 mb-6">
@@ -223,6 +226,42 @@ const Profile = () => {
         </form>
       </Card>
 
+      {/* Trade History stays in left column */}
+      <Card className={`${glassCardClass} p-5`}>
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+        <h2 className="text-base sm:text-lg font-bold mb-4 flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-accent/30">
+            <BarChart3 className="h-4 w-4 text-primary" />
+          </div>
+          <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            Trade History
+          </span>
+        </h2>
+        {loading ? (
+          <p className="text-muted-foreground text-center py-8 text-sm">Loading trade history...</p>
+        ) : tradeHistory.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8 text-sm">No trade history yet</p>
+        ) : (
+          <div className="space-y-3">
+            {tradeHistory.map((trade, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 border border-border/40 transition-all duration-300">
+                <div>
+                  <div className="font-semibold text-sm">{trade.type}</div>
+                  <div className="text-xs text-muted-foreground">{trade.date}</div>
+                </div>
+                <div className="text-right">
+                  <div className={`font-bold text-sm ${trade.isProfit ? "text-emerald-500" : "text-red-500"}`}>{trade.amount}</div>
+                  <div className="text-xs text-muted-foreground capitalize">{trade.status}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+        </div>
+
+        {/* Right column: app, kyc, account info */}
+        <div className="lg:sticky lg:top-24 lg:self-start space-y-5">
       {/* App Download Card */}
       {appDownloadUrl && (
         <Card className={`${glassCardClass} p-5 mb-5 group hover:scale-[1.01] transition-all duration-300`}>
@@ -323,39 +362,8 @@ const Profile = () => {
           </div>
         </div>
       </Card>
-
-      {/* Trade History */}
-      <Card className={`${glassCardClass} p-5`}>
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-        <h2 className="text-base sm:text-lg font-bold mb-4 flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-accent/30">
-            <BarChart3 className="h-4 w-4 text-primary" />
-          </div>
-          <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Trade History
-          </span>
-        </h2>
-        {loading ? (
-          <p className="text-muted-foreground text-center py-8 text-sm">Loading trade history...</p>
-        ) : tradeHistory.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8 text-sm">No trade history yet</p>
-        ) : (
-          <div className="space-y-3">
-            {tradeHistory.map((trade, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 border border-border/40 transition-all duration-300">
-                <div>
-                  <div className="font-semibold text-sm">{trade.type}</div>
-                  <div className="text-xs text-muted-foreground">{trade.date}</div>
-                </div>
-                <div className="text-right">
-                  <div className={`font-bold text-sm ${trade.isProfit ? "text-emerald-500" : "text-red-500"}`}>{trade.amount}</div>
-                  <div className="text-xs text-muted-foreground capitalize">{trade.status}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+        </div>
+      </div>
     </PageShell>
   );
 };
