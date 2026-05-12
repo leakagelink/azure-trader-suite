@@ -285,11 +285,10 @@ All colors MUST be HSL.
 
   /* Visibility safety net: when matte strips a gradient background but the
      element relies on white text (text-primary-foreground / text-white),
-     fall back to a solid primary background so the text stays readable. */
+     fall back to a solid primary background so the text stays readable.
+     Excludes elements with data-state (tabs/segments) — handled below. */
   [class*="bg-gradient-"][class*="text-primary-foreground"]:not([data-state]),
-  [class*="bg-gradient-"][class*="text-white"]:not([data-state]),
-  button[class*="bg-gradient-to-"][class*="text-primary-foreground"],
-  button[class*="bg-gradient-to-"][class*="text-white"] {
+  [class*="bg-gradient-"][class*="text-white"]:not([data-state]) {
     background-color: hsl(var(--primary)) !important;
     color: hsl(var(--primary-foreground)) !important;
   }
