@@ -118,7 +118,7 @@ const Wallet = () => {
   }, []);
 
   return (
-    <PageShell title="My Wallet" subtitle="Manage your funds and transactions" icon={WalletIcon} maxWidth="6xl">
+    <PageShell title="My Wallet" subtitle="Manage your funds and transactions" icon={WalletIcon} maxWidth="wide">
       {/* Deposit Offer Banner */}
       {offerSettings.bonusEnabled && (
         <Card className="mb-6 sm:mb-8 p-5 sm:p-6 bg-gradient-to-r from-primary via-secondary to-accent text-primary-foreground overflow-hidden relative border-0 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.5)] animate-fade-in">
@@ -159,8 +159,11 @@ const Wallet = () => {
         </Card>
       )}
 
+      {/* Pro Desktop Layout: 2-column grid on lg+ */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-6 xl:gap-8">
+       <div>
       {/* Wallet Balances */}
-      <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {walletData.map((wallet, index) => (
           <Card key={index} className={`${glassCardClass} p-5 sm:p-6 group hover:scale-[1.02] transition-all duration-500`}>
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
@@ -199,7 +202,7 @@ const Wallet = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid md:grid-cols-2 gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
         <Card
           className={`${glassCardClass} p-5 sm:p-6 cursor-pointer group hover:scale-[1.02] hover:shadow-2xl transition-all duration-500`}
           onClick={() => setDepositModalOpen(true)}
@@ -264,7 +267,9 @@ const Wallet = () => {
           </div>
         )}
       </Card>
+      </div>
 
+      <div className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
       {/* Deposit History */}
       <Card className={`${glassCardClass} p-5 sm:p-6 mb-6`}>
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
