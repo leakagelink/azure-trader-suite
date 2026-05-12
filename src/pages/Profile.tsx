@@ -362,39 +362,8 @@ const Profile = () => {
           </div>
         </div>
       </Card>
-
-      {/* Trade History */}
-      <Card className={`${glassCardClass} p-5`}>
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-        <h2 className="text-base sm:text-lg font-bold mb-4 flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-accent/30">
-            <BarChart3 className="h-4 w-4 text-primary" />
-          </div>
-          <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Trade History
-          </span>
-        </h2>
-        {loading ? (
-          <p className="text-muted-foreground text-center py-8 text-sm">Loading trade history...</p>
-        ) : tradeHistory.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8 text-sm">No trade history yet</p>
-        ) : (
-          <div className="space-y-3">
-            {tradeHistory.map((trade, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 border border-border/40 transition-all duration-300">
-                <div>
-                  <div className="font-semibold text-sm">{trade.type}</div>
-                  <div className="text-xs text-muted-foreground">{trade.date}</div>
-                </div>
-                <div className="text-right">
-                  <div className={`font-bold text-sm ${trade.isProfit ? "text-emerald-500" : "text-red-500"}`}>{trade.amount}</div>
-                  <div className="text-xs text-muted-foreground capitalize">{trade.status}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+        </div>
+      </div>
     </PageShell>
   );
 };
