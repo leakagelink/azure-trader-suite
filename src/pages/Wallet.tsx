@@ -341,6 +341,8 @@ const Wallet = () => {
           </div>
         )}
       </Card>
+      </div>
+      </div>
 
       <DepositModal
         open={depositModalOpen}
