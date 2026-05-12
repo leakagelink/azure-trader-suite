@@ -383,6 +383,9 @@ const Dashboard = () => {
               <TopMoversStrip compact />
             </div>
 
+            {/* Pro desktop layout: markets + side rail */}
+            <div className="xl:grid xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] xl:gap-6 2xl:gap-8">
+            <div className="min-w-0">
             <Tabs defaultValue="crypto" className="w-full animate-fade-in" style={{ animationDelay: "0.2s" }}>
               <TabsList className={`grid w-full mb-4 sm:mb-6 h-auto p-1.5 bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg ${
                 forexEnabled && commoditiesEnabled ? 'grid-cols-3' : 
@@ -549,17 +552,20 @@ const Dashboard = () => {
               )}
             </Tabs>
 
-            {/* Live Trading Signals */}
-            <div className="mt-8 sm:mt-12 -mx-3 sm:-mx-4 md:-mx-6 animate-fade-in" style={{ animationDelay: "0.25s" }}>
-              <LiveSignals authenticated />
             </div>
 
-            {/* Live Market News Feed */}
-            <div className="mt-8 sm:mt-12 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <div className="relative rounded-2xl bg-card/50 backdrop-blur-xl border border-border/60 p-4 sm:p-6 shadow-xl">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-                <MarketNewsFeed variant="dashboard" defaultCategory="all" limit={8} />
+            {/* Right rail on xl+ */}
+            <div className="xl:sticky xl:top-24 xl:self-start xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:pr-1 space-y-6 xl:space-y-5 mt-8 xl:mt-0">
+              <div className="-mx-3 sm:-mx-4 md:-mx-6 xl:mx-0 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+                <LiveSignals authenticated />
               </div>
+              <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
+                <div className="relative rounded-2xl bg-card/50 backdrop-blur-xl border border-border/60 p-4 sm:p-6 shadow-xl">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                  <MarketNewsFeed variant="dashboard" defaultCategory="all" limit={8} />
+                </div>
+              </div>
+            </div>
             </div>
           </div>
         </main>
