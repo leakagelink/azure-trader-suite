@@ -343,8 +343,8 @@ const Dashboard = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 pb-20 overflow-x-hidden">
-          <div className="max-w-7xl mx-auto w-full overflow-hidden">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 pb-20 overflow-x-hidden">
+          <div className="max-w-7xl xl:max-w-[1700px] 2xl:max-w-[1900px] mx-auto w-full overflow-hidden">
             {/* Hero Header */}
             <div className="mb-6 sm:mb-8 animate-fade-in">
               <div className="relative inline-block">
