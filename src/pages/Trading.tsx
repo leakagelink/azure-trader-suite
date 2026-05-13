@@ -1172,7 +1172,7 @@ const Trading = () => {
             size="lg"
           >
             <TrendingUp className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-            LONG
+            BUY
           </Button>
           <Button
             onClick={() => setShowShortDialog(true)}
@@ -1180,18 +1180,18 @@ const Trading = () => {
             size="lg"
           >
             <TrendingDown className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-            SHORT
+            SELL
           </Button>
         </div>
       </div>
 
-      {/* Long Position Dialog */}
+      {/* Buy Position Dialog */}
       <Dialog open={showLongDialog} onOpenChange={setShowLongDialog}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain touch-pan-y p-4 sm:p-6 sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-500">
               <TrendingUp className="h-5 w-5" />
-              Open LONG Position
+              Open BUY Position
             </DialogTitle>
             <DialogDescription>
               Buy {symbol?.toUpperCase()}
@@ -1293,7 +1293,7 @@ const Trading = () => {
               </div>
             )}
 
-            {/* Stop Loss Input for Long */}
+            {/* Stop Loss Input for Buy */}
             <div>
               <Label htmlFor="long-stoploss">Stop Loss Price (Optional)</Label>
               <div className="relative mt-2">
@@ -1311,7 +1311,7 @@ const Trading = () => {
               <p className="text-xs text-muted-foreground mt-1">Position auto-closes if price drops to this level</p>
             </div>
 
-            {/* Take Profit Input for Long */}
+            {/* Take Profit Input for Buy */}
             <div>
               <Label htmlFor="long-takeprofit">Take Profit Price (Optional)</Label>
               <div className="relative mt-2">
