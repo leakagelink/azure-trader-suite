@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { invokeForexChartData, getCommoditiesData } from "@/lib/forexCache";
+import { invokeForexChartData, getCommoditiesData, getForexData } from "@/lib/forexCache";
 import { isForexSymbol, isCommoditySymbol } from "@/lib/marketSymbols";
 
 // Synthesize OHLC candles from a single current price (used for commodities and as fallback)
