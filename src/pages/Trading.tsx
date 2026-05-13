@@ -1556,6 +1556,12 @@ const Trading = () => {
               </div>
             ) : (
               <div>
+                {!lotSpec.known && (
+                  <div className="mb-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+                    ⚠️ Symbol <strong>{(symbol || '').toUpperCase()}</strong> is not in the contract-size registry.
+                    Trading is disabled to prevent incorrect lot sizing. Please contact support to add it.
+                  </div>
+                )}
                 <Label htmlFor="short-lotsize">Lot Size (Units)</Label>
                 <div className="relative mt-2">
                   <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1569,6 +1575,7 @@ const Trading = () => {
                     min={lotSpec.minLot}
                     max={lotSpec.maxLot}
                     step={lotSpec.step}
+                    disabled={!lotSpec.known}
                   />
                 </div>
                 {!lotValidation.ok ? (
@@ -1576,7 +1583,6 @@ const Trading = () => {
                 ) : (
                   <p className="text-xs text-muted-foreground mt-1">
                     {lotUnitLabel} • Min {lotSpec.minLot}, Max {lotSpec.maxLot}, Step {lotSpec.step} • Quantity: {orderCalc.assetQuantity.toLocaleString(undefined,{maximumFractionDigits:4})}
-                    {!lotSpec.known && <span className="text-amber-600 ml-1">(auto-detected spec)</span>}
                   </p>
                 )}
               </div>
