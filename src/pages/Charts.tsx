@@ -224,13 +224,8 @@ export default function Charts() {
 
     const fetchOnce = (): Promise<any> => {
       if (isCommodity) {
-        return getCommoditiesData().then((snap) => {
-          const row = (snap?.commoditiesData || []).find(
-            (c: any) => c.symbol?.toUpperCase() === upper,
-          );
-          const price = row ? parseFloat(row.price) : NaN;
-          if (!Number.isFinite(price)) throw new Error("No commodity price");
-          return { data: { candles: synthesizeCandles(price, tf) }, error: null };
+        return supabase.functions.invoke("fetch-commodity-chart-data", {
+          body: { symbol: upper, interval: tf },
         });
       }
       if (isForex) {
