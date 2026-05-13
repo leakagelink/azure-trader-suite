@@ -1380,20 +1380,20 @@ const Trading = () => {
                 }
               >
                 {orderType === 'limit' ? <ShoppingCart className="mr-2 h-5 w-5" /> : <TrendingUp className="mr-2 h-5 w-5" />}
-                {orderType === 'limit' ? 'Place Limit LONG Order' : 'Open LONG Position'}
+                {orderType === 'limit' ? 'Place Limit BUY Order' : 'Open BUY Position'}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Short Position Dialog */}
+      {/* Sell Position Dialog */}
       <Dialog open={showShortDialog} onOpenChange={setShowShortDialog}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain touch-pan-y p-4 sm:p-6 sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-500">
               <TrendingDown className="h-5 w-5" />
-              Open SHORT Position
+              Open SELL Position
             </DialogTitle>
             <DialogDescription>
               Sell {symbol?.toUpperCase()}
@@ -1495,7 +1495,7 @@ const Trading = () => {
               </div>
             )}
 
-            {/* Stop Loss Input for Short */}
+            {/* Stop Loss Input for Sell */}
             <div>
               <Label htmlFor="short-stoploss">Stop Loss Price (Optional)</Label>
               <div className="relative mt-2">
@@ -1513,7 +1513,7 @@ const Trading = () => {
               <p className="text-xs text-muted-foreground mt-1">Position auto-closes if price rises to this level</p>
             </div>
 
-            {/* Take Profit Input for Short */}
+            {/* Take Profit Input for Sell */}
             <div>
               <Label htmlFor="short-takeprofit">Take Profit Price (Optional)</Label>
               <div className="relative mt-2">
@@ -1582,7 +1582,7 @@ const Trading = () => {
                 }
               >
                 {orderType === 'limit' ? <ShoppingCart className="mr-2 h-5 w-5" /> : <TrendingDown className="mr-2 h-5 w-5" />}
-                {orderType === 'limit' ? 'Place Limit SHORT Order' : 'Open SHORT Position'}
+                {orderType === 'limit' ? 'Place Limit SELL Order' : 'Open SELL Position'}
               </Button>
             </div>
           </div>
