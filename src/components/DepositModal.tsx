@@ -65,6 +65,8 @@ const DepositModal = ({ open, onOpenChange, onSuccess }: DepositModalProps) => {
       setInstantStep("amount");
       setAmount("");
       setTransactionId("");
+      setPaymentProof(null);
+      setPaymentProofPreview("");
       setCountdown(COUNTDOWN_DURATION);
       setIsAutoLocked(false);
       setDepositRequestId(null);
