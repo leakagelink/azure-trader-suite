@@ -365,6 +365,29 @@ const Trading = () => {
     fetchLeverageCap();
   }, [user?.id]);
 
+  // Reactive order math — recomputes instantly on leverage / amount / price change
+  const orderCalc = useMemo(() => {
+    const lev = Math.max(1, Number(leverage) || 1);
+    const isLimit = orderType === 'limit';
+    const limitNum = parseFloat(limitPrice);
+    const execPrice = isLimit && !isNaN(limitNum) && limitNum > 0
+      ? limitNum
+      : (typeof currentPrice === 'number' ? currentPrice : 0);
+    const amountNum = parseFloat(tradeAmount);
+    const lotNum = parseFloat(lotSize);
+    let positionValue = 0;
+    let assetQuantity = 0;
+    if (inputMode === 'amount') {
+      positionValue = !isNaN(amountNum) && amountNum > 0 ? amountNum : 0;
+      assetQuantity = execPrice > 0 ? positionValue / execPrice : 0;
+    } else {
+      assetQuantity = !isNaN(lotNum) && lotNum > 0 ? lotNum : 0;
+      positionValue = assetQuantity * execPrice;
+    }
+    const marginRequired = lev > 0 ? positionValue / lev : positionValue;
+    return { lev, execPrice, isLimit, positionValue, assetQuantity, marginRequired };
+  }, [leverage, orderType, limitPrice, currentPrice, tradeAmount, lotSize, inputMode]);
+
   // Swipe gesture handlers
   const navigateTimeframe = (direction: 'left' | 'right') => {
     const currentIndex = TIMEFRAMES.indexOf(timeframe);
