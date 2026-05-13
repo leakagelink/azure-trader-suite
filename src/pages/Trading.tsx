@@ -1669,12 +1669,7 @@ const Trading = () => {
             </DialogDescription>
           </DialogHeader>
           {pendingOrder && (() => {
-            const isLimit = orderType === 'limit';
-            const execPrice = isLimit ? parseFloat(limitPrice || '0') : currentPrice;
-            const positionValue = inputMode === 'amount'
-              ? parseFloat(tradeAmount || '0')
-              : parseFloat(lotSize || '0') * (execPrice || currentPrice);
-            const units = execPrice > 0 ? positionValue / execPrice : 0;
+            const { isLimit, execPrice, positionValue, assetQuantity, marginRequired, lev } = orderCalc;
             const sl = parseFloat(stopLoss || '0');
             const tp = parseFloat(takeProfit || '0');
             return (
@@ -1682,10 +1677,11 @@ const Trading = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Symbol</span><span className="font-semibold">{symbol?.toUpperCase()}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Side</span><span className={`font-semibold ${pendingOrder === 'long' ? 'text-green-500' : 'text-red-500'}`}>{pendingOrder === 'long' ? 'BUY' : 'SELL'}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Order Type</span><span className="font-semibold uppercase">{orderType}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Leverage</span><span className="font-semibold">{leverage}x</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Leverage</span><span className="font-semibold">{lev}x</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">{isLimit ? 'Limit Price' : 'Market Price'}</span><span className="font-semibold">${execPrice.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-semibold">${positionValue.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Units</span><span className="font-semibold">{units.toFixed(6)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Position Value</span><span className="font-semibold">${positionValue.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Units</span><span className="font-semibold">{assetQuantity.toFixed(6)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Margin Required</span><span className="font-semibold">${marginRequired.toFixed(2)}</span></div>
                 <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Stop Loss</span><span className="font-semibold">{sl > 0 ? `$${sl.toFixed(2)}` : '—'}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Take Profit</span><span className="font-semibold">{tp > 0 ? `$${tp.toFixed(2)}` : '—'}</span></div>
               </div>
