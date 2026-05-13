@@ -879,7 +879,8 @@ const Trading = () => {
         usdAmount = margin * leverage; // notional position value
         assetQuantity = usdAmount / currentPrice;
       } else {
-        assetQuantity = parseFloat(lotSize);
+        const lots = parseFloat(lotSize);
+        assetQuantity = lots * contractSize;
         usdAmount = assetQuantity * currentPrice;
         margin = (assetQuantity * currentPrice) / leverage;
       }
