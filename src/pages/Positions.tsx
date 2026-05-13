@@ -1215,18 +1215,25 @@ const Positions = () => {
         })()}
 
         <Tabs defaultValue="open" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 h-auto p-1.5 bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg">
+          <TabsList className="grid w-full grid-cols-3 mb-6 h-auto p-1.5 bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg">
             <TabsTrigger
               value="open"
               className="text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:via-secondary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] font-semibold transition-all duration-300"
             >
-              Open Positions ({openPositions.length})
+              Open ({openPositions.length})
             </TabsTrigger>
             <TabsTrigger
               value="closed"
               className="text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:via-secondary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] font-semibold transition-all duration-300"
             >
-              Closed Positions ({closedPositions.length})
+              Closed ({closedPositions.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:via-secondary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] font-semibold transition-all duration-300"
+            >
+              <History className="h-3.5 w-3.5 mr-1.5 inline" />
+              History
             </TabsTrigger>
           </TabsList>
 
