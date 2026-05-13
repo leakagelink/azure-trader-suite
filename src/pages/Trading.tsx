@@ -1567,14 +1567,23 @@ const Trading = () => {
                   <Input
                     id="short-lotsize"
                     type="number"
-                    placeholder="Enter lot size (e.g., 0.01, 0.1, 1)"
+                    placeholder={`Min ${lotSpec.minLot} • Max ${lotSpec.maxLot}`}
                     value={lotSize}
                     onChange={(e) => setLotSize(e.target.value)}
                     className="pl-9"
-                    step="0.001"
+                    min={lotSpec.minLot}
+                    max={lotSpec.maxLot}
+                    step={lotSpec.step}
+                    disabled={!lotSpec.known}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{lotUnitLabel} • Quantity: {(parseFloat(lotSize || '0') * contractSize).toLocaleString(undefined,{maximumFractionDigits:4})}</p>
+                {!lotSpec.known ? (
+                  <p className="text-xs text-destructive mt-1">Contract size for this symbol is not configured. Trading disabled.</p>
+                ) : !lotValidation.ok ? (
+                  <p className="text-xs text-destructive mt-1">{lotValidation.error}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">{lotUnitLabel} • Min {lotSpec.minLot}, Max {lotSpec.maxLot}, Step {lotSpec.step} • Quantity: {(parseFloat(lotSize || '0') * contractSize).toLocaleString(undefined,{maximumFractionDigits:4})}</p>
+                )}
               </div>
             )}
 
