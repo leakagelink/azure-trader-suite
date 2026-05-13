@@ -5,8 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { invokeForexData } from "@/lib/forexCache";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, TrendingUp, TrendingDown, X, RefreshCcw, ArrowUp, ArrowDown, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, X, RefreshCcw, ArrowUp, ArrowDown, CheckCircle2, Loader2, History, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -91,6 +94,10 @@ const Positions = () => {
   const [closePositionId, setClosePositionId] = useState<string | null>(null);
   const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
   const [closedSuccessId, setClosedSuccessId] = useState<string | null>(null);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyType, setHistoryType] = useState<"all" | "long" | "short">("all");
+  const [historyOutcome, setHistoryOutcome] = useState<"all" | "profit" | "loss">("all");
+  const [historyRange, setHistoryRange] = useState<"all" | "today" | "7d" | "30d" | "90d">("all");
   const [priceChanges, setPriceChanges] = useState<Record<string, { direction: 'up' | 'down' | 'none'; flash: boolean }>>({});
   const previousPricesRef = useRef<Record<string, number>>({});
   const positionsRef = useRef<Position[]>([]);
@@ -1208,18 +1215,25 @@ const Positions = () => {
         })()}
 
         <Tabs defaultValue="open" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 h-auto p-1.5 bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg">
+          <TabsList className="grid w-full grid-cols-3 mb-6 h-auto p-1.5 bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg">
             <TabsTrigger
               value="open"
               className="text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:via-secondary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] font-semibold transition-all duration-300"
             >
-              Open Positions ({openPositions.length})
+              Open ({openPositions.length})
             </TabsTrigger>
             <TabsTrigger
               value="closed"
               className="text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:via-secondary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] font-semibold transition-all duration-300"
             >
-              Closed Positions ({closedPositions.length})
+              Closed ({closedPositions.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:via-secondary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] font-semibold transition-all duration-300"
+            >
+              <History className="h-3.5 w-3.5 mr-1.5 inline" />
+              History
             </TabsTrigger>
           </TabsList>
 
@@ -1255,6 +1269,135 @@ const Positions = () => {
                 <PositionCard key={position.id} position={position} />
               ))
             )}
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-4">
+            {(() => {
+              const now = Date.now();
+              const rangeMs: Record<string, number> = {
+                today: 24 * 60 * 60 * 1000,
+                "7d": 7 * 24 * 60 * 60 * 1000,
+                "30d": 30 * 24 * 60 * 60 * 1000,
+                "90d": 90 * 24 * 60 * 60 * 1000,
+              };
+              const filtered = closedPositions.filter((p) => {
+                if (historySearch && !p.symbol.toLowerCase().includes(historySearch.toLowerCase())) return false;
+                if (historyType !== "all" && p.position_type !== historyType) return false;
+                if (historyOutcome === "profit" && (p.pnl || 0) <= 0) return false;
+                if (historyOutcome === "loss" && (p.pnl || 0) >= 0) return false;
+                if (historyRange !== "all") {
+                  const closedAt = p.closed_at ? new Date(p.closed_at).getTime() : new Date(p.opened_at).getTime();
+                  if (now - closedAt > rangeMs[historyRange]) return false;
+                }
+                return true;
+              });
+
+              const totalPnl = filtered.reduce((s, p) => s + (Number(p.pnl) || 0), 0);
+              const wins = filtered.filter((p) => (p.pnl || 0) > 0).length;
+              const losses = filtered.filter((p) => (p.pnl || 0) < 0).length;
+              const winRate = filtered.length > 0 ? ((wins / filtered.length) * 100).toFixed(1) : "0.0";
+
+              return (
+                <>
+                  {/* Filter Bar */}
+                  <Card className="p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <Filter className="h-4 w-4 text-primary" />
+                      <span>Filters</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search symbol..."
+                          value={historySearch}
+                          onChange={(e) => setHistorySearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <Select value={historyType} onValueChange={(v: any) => setHistoryType(v)}>
+                        <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="long">Long Only</SelectItem>
+                          <SelectItem value="short">Short Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={historyOutcome} onValueChange={(v: any) => setHistoryOutcome(v)}>
+                        <SelectTrigger><SelectValue placeholder="Outcome" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Outcomes</SelectItem>
+                          <SelectItem value="profit">Profit</SelectItem>
+                          <SelectItem value="loss">Loss</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={historyRange} onValueChange={(v: any) => setHistoryRange(v)}>
+                        <SelectTrigger><SelectValue placeholder="Date Range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Time</SelectItem>
+                          <SelectItem value="today">Last 24 Hours</SelectItem>
+                          <SelectItem value="7d">Last 7 Days</SelectItem>
+                          <SelectItem value="30d">Last 30 Days</SelectItem>
+                          <SelectItem value="90d">Last 90 Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {(historySearch || historyType !== "all" || historyOutcome !== "all" || historyRange !== "all") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setHistorySearch("");
+                          setHistoryType("all");
+                          setHistoryOutcome("all");
+                          setHistoryRange("all");
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" /> Clear filters
+                      </Button>
+                    )}
+                  </Card>
+
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Total Trades</p>
+                      <p className="text-xl font-bold">{filtered.length}</p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Net P&L</p>
+                      <p className={`text-xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+                      </p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Win / Loss</p>
+                      <p className="text-xl font-bold">
+                        <span className="text-green-600">{wins}</span>
+                        <span className="text-muted-foreground"> / </span>
+                        <span className="text-red-600">{losses}</span>
+                      </p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Win Rate</p>
+                      <p className="text-xl font-bold text-primary">{winRate}%</p>
+                    </Card>
+                  </div>
+
+                  {/* Results */}
+                  {filtered.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <History className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground">No trades match your filters</p>
+                    </Card>
+                  ) : (
+                    filtered.map((position) => (
+                      <PositionCard key={position.id} position={position} />
+                    ))
+                  )}
+                </>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </main>
