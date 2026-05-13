@@ -1010,9 +1010,14 @@ const Positions = () => {
             </div>
             <div>
               <h3 className="font-bold text-lg">{position.symbol}/USDT</h3>
-              <span className={`text-sm font-semibold ${isLong ? 'text-green-500' : 'text-red-500'}`}>
-                {position.position_type === 'long' ? 'BUY' : 'SELL'} {position.leverage}x
-              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className={`text-sm font-semibold ${isLong ? 'text-green-500' : 'text-red-500'}`}>
+                  {position.position_type === 'long' ? 'BUY' : 'SELL'}
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                  {position.leverage}x Leverage
+                </span>
+              </div>
             </div>
           </div>
           {showCloseButton && !isClosing && !isClosedSuccess && (
