@@ -94,6 +94,10 @@ const Positions = () => {
   const [closePositionId, setClosePositionId] = useState<string | null>(null);
   const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
   const [closedSuccessId, setClosedSuccessId] = useState<string | null>(null);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyType, setHistoryType] = useState<"all" | "long" | "short">("all");
+  const [historyOutcome, setHistoryOutcome] = useState<"all" | "profit" | "loss">("all");
+  const [historyRange, setHistoryRange] = useState<"all" | "today" | "7d" | "30d" | "90d">("all");
   const [priceChanges, setPriceChanges] = useState<Record<string, { direction: 'up' | 'down' | 'none'; flash: boolean }>>({});
   const previousPricesRef = useRef<Record<string, number>>({});
   const positionsRef = useRef<Position[]>([]);
