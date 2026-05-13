@@ -111,6 +111,7 @@ const AdminPanel = () => {
     exchangeRate: "0.012",
     appDownloadUrl: "",
     apiPassword: "",
+    maxLeverage: "100",
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
