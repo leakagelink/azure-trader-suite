@@ -240,6 +240,33 @@ const Admin = () => {
                             ))}
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="1"
+                              max="100"
+                              step="1"
+                              placeholder="Global"
+                              className="h-8 w-24"
+                              value={leverageDraft[user.id] ?? ""}
+                              onChange={(e) =>
+                                setLeverageDraft((d) => ({ ...d, [user.id]: e.target.value }))
+                              }
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!!savingLeverage[user.id]}
+                              onClick={() => saveLeverageCap(user.id)}
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {user.max_leverage != null ? `${user.max_leverage}x override` : "Using global cap"}
+                          </p>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
