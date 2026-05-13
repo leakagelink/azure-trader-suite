@@ -741,7 +741,7 @@ const Trading = () => {
 
         if (error) throw error;
 
-        toast.success(`Limit ${type.toUpperCase()} order placed @ ${currencySymbol}${limitPriceValue.toFixed(2)}. Will execute when price reaches this level.`);
+        toast.success(`Limit ${type === 'long' ? 'BUY' : 'SELL'} order placed @ ${currencySymbol}${limitPriceValue.toFixed(2)}. Will execute when price reaches this level.`);
         setTradeAmount("");
         setLotSize("");
         setStopLoss("");
@@ -906,7 +906,7 @@ const Trading = () => {
           reference_id: null
         });
 
-        toast.success(`Averaged into existing ${type.toUpperCase()} position: +${assetQuantity.toFixed(6)} ${symbol?.toUpperCase()} @ $${currentPrice.toFixed(2)}. New avg entry: $${newAvgEntryPrice.toFixed(2)}, Total margin: $${newTotalMargin.toFixed(2)}`);
+        toast.success(`Averaged into existing ${type === 'long' ? 'BUY' : 'SELL'} position: +${assetQuantity.toFixed(6)} ${symbol?.toUpperCase()} @ $${currentPrice.toFixed(2)}. New avg entry: $${newAvgEntryPrice.toFixed(2)}, Total margin: $${newTotalMargin.toFixed(2)}`);
       } else {
         // CREATE NEW POSITION
         const { error } = await supabase.from('positions').insert({
@@ -944,7 +944,7 @@ const Trading = () => {
 
         const slMessage = stopLossValue ? ` | SL: $${stopLossValue.toFixed(2)}` : '';
         const tpMessage = takeProfitValue ? ` | TP: $${takeProfitValue.toFixed(2)}` : '';
-        toast.success(`${type.toUpperCase()} position opened: ${assetQuantity.toFixed(6)} ${symbol?.toUpperCase()} @ $${currentPrice.toFixed(2)}${slMessage}${tpMessage}. Margin: $${margin.toFixed(2)}`);
+        toast.success(`${type === 'long' ? 'BUY' : 'SELL'} position opened: ${assetQuantity.toFixed(6)} ${symbol?.toUpperCase()} @ $${currentPrice.toFixed(2)}${slMessage}${tpMessage}. Margin: $${margin.toFixed(2)}`);
       }
 
       setTradeAmount("");

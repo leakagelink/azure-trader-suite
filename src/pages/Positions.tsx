@@ -622,7 +622,7 @@ const Positions = () => {
         .update({ status: 'executed' as any, executed_at: new Date().toISOString() })
         .eq('id', order.id);
 
-      toast.success(`Limit ${order.position_type.toUpperCase()} order executed! ${order.symbol} @ $${entryPrice.toFixed(2)}`);
+      toast.success(`Limit ${order.position_type === 'long' ? 'BUY' : 'SELL'} order executed! ${order.symbol} @ $${entryPrice.toFixed(2)}`);
       fetchPositions();
     } catch (error) {
       console.error('Error executing limit order:', error);
