@@ -1558,6 +1558,20 @@ const Trading = () => {
               <p className="text-xs text-muted-foreground mt-1">Position auto-closes when price reaches this profit target</p>
             </div>
             
+            <div>
+              <Label>Leverage</Label>
+              <Select value={leverage.toString()} onValueChange={(v) => setLeverage(parseInt(v))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 5, 10, 20, 50, 100].map((lev) => (
+                    <SelectItem key={lev} value={lev.toString()}>{lev}x</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="p-3 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{orderType === 'limit' ? 'Limit Price:' : 'Entry Price:'}</span>
