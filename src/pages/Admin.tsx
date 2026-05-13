@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, Shield } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Users, Shield, Save } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 
@@ -19,6 +20,7 @@ interface AdminUser {
   full_name: string | null;
   avatar_url: string | null;
   roles: string[];
+  max_leverage: number | null;
 }
 
 const Admin = () => {
