@@ -5,8 +5,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Map app interval -> Yahoo {interval, range}
-// Yahoo supported intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+const SYMBOL_TO_YAHOO: Record<string, string> = {
+  XAU: 'GC=F',     // Gold
+  XAG: 'SI=F',     // Silver
+  XPT: 'PL=F',     // Platinum
+  XPD: 'PA=F',     // Palladium
+  XCU: 'HG=F',     // Copper
+  WTI: 'CL=F',     // Crude Oil WTI
+  BRENT: 'BZ=F',   // Brent
+  NG: 'NG=F',      // Natural Gas
+};
+
 function mapInterval(tf: string): { yInterval: string; yRange: string } {
   switch (tf) {
     case '1m':  return { yInterval: '1m',  yRange: '1d'  };
@@ -22,15 +31,12 @@ function mapInterval(tf: string): { yInterval: string; yRange: string } {
   }
 }
 
-// Aggregate N consecutive candles into one (used for 2h/4h from 60m)
 function aggregateCandles(candles: any[], factor: number) {
   if (factor <= 1) return candles;
   const out: any[] = [];
   for (let i = 0; i < candles.length; i += factor) {
     const chunk = candles.slice(i, i + factor);
     if (chunk.length === 0) continue;
-    const open = chunk[0].open;
-    const close = chunk[chunk.length - 1].close;
     let high = chunk[0].high, low = chunk[0].low, vol = 0;
     for (const c of chunk) {
       if (c.high > high) high = c.high;
@@ -39,8 +45,10 @@ function aggregateCandles(candles: any[], factor: number) {
     }
     out.push({
       timestamp: chunk[0].timestamp,
-      timestampHuman: chunk[0].timestampHuman,
-      open, high, low, close, volume: vol,
+      open: chunk[0].open,
+      high, low,
+      close: chunk[chunk.length - 1].close,
+      volume: vol,
     });
   }
   return out;
@@ -73,25 +81,20 @@ async function fetchYahooCandles(yahooSymbol: string, interval: string) {
     if (o == null || h == null || l == null || c == null) continue;
     candles.push({
       timestamp: ts[i],
-      timestampHuman: new Date(ts[i] * 1000).toISOString(),
-      open: +(+o).toFixed(6),
-      high: +(+h).toFixed(6),
-      low: +(+l).toFixed(6),
-      close: +(+c).toFixed(6),
+      open: +(+o).toFixed(4),
+      high: +(+h).toFixed(4),
+      low: +(+l).toFixed(4),
+      close: +(+c).toFixed(4),
       volume: Math.floor(+(v ?? 0)),
     });
   }
   if (candles.length === 0) return null;
 
-  // Aggregate where Yahoo doesn't have native interval
   let out = candles;
   if (interval === '2h') out = aggregateCandles(candles, 2);
   if (interval === '4h') out = aggregateCandles(candles, 4);
-
-  // Limit to last 100 candles for chart performance
   if (out.length > 100) out = out.slice(out.length - 100);
 
-  // Anchor last candle to most recent live price if available
   const livePrice = meta?.regularMarketPrice;
   if (typeof livePrice === 'number' && out.length > 0) {
     const last = out[out.length - 1];
@@ -99,7 +102,6 @@ async function fetchYahooCandles(yahooSymbol: string, interval: string) {
     if (livePrice > last.high) last.high = livePrice;
     if (livePrice < last.low) last.low = livePrice;
   }
-
   return { candles: out, currentPrice: livePrice ?? out[out.length - 1].close };
 }
 
@@ -107,36 +109,33 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     const { symbol, interval } = await req.json();
     if (!symbol) throw new Error('Symbol is required');
-
-    // symbol is the quote currency vs USD (e.g. "EUR" => USDEUR=X)
-    const yahooSymbol = `USD${symbol.toUpperCase()}=X`;
+    const upper = symbol.toUpperCase();
+    const yahooSymbol = SYMBOL_TO_YAHOO[upper];
+    if (!yahooSymbol) {
+      return new Response(
+        JSON.stringify({ success: false, error: `Unsupported commodity symbol: ${upper}`, candles: [] }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const result = await fetchYahooCandles(yahooSymbol, interval || '1h');
-
     if (!result) {
       return new Response(
         JSON.stringify({ success: false, error: 'No chart data available', candles: [] }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
     return new Response(
-      JSON.stringify({
-        success: true,
-        candles: result.candles,
-        currentPrice: result.currentPrice,
-        source: 'yahoo',
-      }),
+      JSON.stringify({ success: true, candles: result.candles, currentPrice: result.currentPrice, source: 'yahoo' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in fetch-forex-chart-data function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in fetch-commodity-chart-data:', error);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage, candles: [] }),
+      JSON.stringify({ error: msg, candles: [] }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
