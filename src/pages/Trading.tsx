@@ -777,8 +777,9 @@ const Trading = () => {
         return;
       }
     } else {
-      if (!lotSize || parseFloat(lotSize) <= 0) {
-        toast.error("Please enter a valid lot size");
+      const lotCheck = validateLotInput(symbol || '', lotSize);
+      if (!lotCheck.ok) {
+        toast.error(lotCheck.error || "Invalid lot size");
         return;
       }
     }
