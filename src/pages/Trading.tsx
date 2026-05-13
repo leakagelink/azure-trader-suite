@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { Card } from "@/components/ui/card";
