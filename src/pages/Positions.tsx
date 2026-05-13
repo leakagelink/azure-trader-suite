@@ -1270,6 +1270,135 @@ const Positions = () => {
               ))
             )}
           </TabsContent>
+
+          <TabsContent value="history" className="space-y-4">
+            {(() => {
+              const now = Date.now();
+              const rangeMs: Record<string, number> = {
+                today: 24 * 60 * 60 * 1000,
+                "7d": 7 * 24 * 60 * 60 * 1000,
+                "30d": 30 * 24 * 60 * 60 * 1000,
+                "90d": 90 * 24 * 60 * 60 * 1000,
+              };
+              const filtered = closedPositions.filter((p) => {
+                if (historySearch && !p.symbol.toLowerCase().includes(historySearch.toLowerCase())) return false;
+                if (historyType !== "all" && p.position_type !== historyType) return false;
+                if (historyOutcome === "profit" && (p.pnl || 0) <= 0) return false;
+                if (historyOutcome === "loss" && (p.pnl || 0) >= 0) return false;
+                if (historyRange !== "all") {
+                  const closedAt = p.closed_at ? new Date(p.closed_at).getTime() : new Date(p.opened_at).getTime();
+                  if (now - closedAt > rangeMs[historyRange]) return false;
+                }
+                return true;
+              });
+
+              const totalPnl = filtered.reduce((s, p) => s + (Number(p.pnl) || 0), 0);
+              const wins = filtered.filter((p) => (p.pnl || 0) > 0).length;
+              const losses = filtered.filter((p) => (p.pnl || 0) < 0).length;
+              const winRate = filtered.length > 0 ? ((wins / filtered.length) * 100).toFixed(1) : "0.0";
+
+              return (
+                <>
+                  {/* Filter Bar */}
+                  <Card className="p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <Filter className="h-4 w-4 text-primary" />
+                      <span>Filters</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search symbol..."
+                          value={historySearch}
+                          onChange={(e) => setHistorySearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <Select value={historyType} onValueChange={(v: any) => setHistoryType(v)}>
+                        <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="long">Long Only</SelectItem>
+                          <SelectItem value="short">Short Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={historyOutcome} onValueChange={(v: any) => setHistoryOutcome(v)}>
+                        <SelectTrigger><SelectValue placeholder="Outcome" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Outcomes</SelectItem>
+                          <SelectItem value="profit">Profit</SelectItem>
+                          <SelectItem value="loss">Loss</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={historyRange} onValueChange={(v: any) => setHistoryRange(v)}>
+                        <SelectTrigger><SelectValue placeholder="Date Range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Time</SelectItem>
+                          <SelectItem value="today">Last 24 Hours</SelectItem>
+                          <SelectItem value="7d">Last 7 Days</SelectItem>
+                          <SelectItem value="30d">Last 30 Days</SelectItem>
+                          <SelectItem value="90d">Last 90 Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {(historySearch || historyType !== "all" || historyOutcome !== "all" || historyRange !== "all") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setHistorySearch("");
+                          setHistoryType("all");
+                          setHistoryOutcome("all");
+                          setHistoryRange("all");
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" /> Clear filters
+                      </Button>
+                    )}
+                  </Card>
+
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Total Trades</p>
+                      <p className="text-xl font-bold">{filtered.length}</p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Net P&L</p>
+                      <p className={`text-xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+                      </p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Win / Loss</p>
+                      <p className="text-xl font-bold">
+                        <span className="text-green-600">{wins}</span>
+                        <span className="text-muted-foreground"> / </span>
+                        <span className="text-red-600">{losses}</span>
+                      </p>
+                    </Card>
+                    <Card className="p-3">
+                      <p className="text-xs text-muted-foreground">Win Rate</p>
+                      <p className="text-xl font-bold text-primary">{winRate}%</p>
+                    </Card>
+                  </div>
+
+                  {/* Results */}
+                  {filtered.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <History className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-muted-foreground">No trades match your filters</p>
+                    </Card>
+                  ) : (
+                    filtered.map((position) => (
+                      <PositionCard key={position.id} position={position} />
+                    ))
+                  )}
+                </>
+              );
+            })()}
+          </TabsContent>
         </Tabs>
       </main>
 
