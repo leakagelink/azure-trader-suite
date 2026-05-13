@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { Card } from "@/components/ui/card";
@@ -364,6 +364,29 @@ const Trading = () => {
     };
     fetchLeverageCap();
   }, [user?.id]);
+
+  // Reactive order math — recomputes instantly on leverage / amount / price change
+  const orderCalc = useMemo(() => {
+    const lev = Math.max(1, Number(leverage) || 1);
+    const isLimit = orderType === 'limit';
+    const limitNum = parseFloat(limitPrice);
+    const execPrice = isLimit && !isNaN(limitNum) && limitNum > 0
+      ? limitNum
+      : (typeof currentPrice === 'number' ? currentPrice : 0);
+    const amountNum = parseFloat(tradeAmount);
+    const lotNum = parseFloat(lotSize);
+    let positionValue = 0;
+    let assetQuantity = 0;
+    if (inputMode === 'amount') {
+      positionValue = !isNaN(amountNum) && amountNum > 0 ? amountNum : 0;
+      assetQuantity = execPrice > 0 ? positionValue / execPrice : 0;
+    } else {
+      assetQuantity = !isNaN(lotNum) && lotNum > 0 ? lotNum : 0;
+      positionValue = assetQuantity * execPrice;
+    }
+    const marginRequired = lev > 0 ? positionValue / lev : positionValue;
+    return { lev, execPrice, isLimit, positionValue, assetQuantity, marginRequired };
+  }, [leverage, orderType, limitPrice, currentPrice, tradeAmount, lotSize, inputMode]);
 
   // Swipe gesture handlers
   const navigateTimeframe = (direction: 'left' | 'right') => {
@@ -1388,32 +1411,21 @@ const Trading = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Asset Quantity:</span>
                 <span className="font-semibold">
-                  {inputMode === 'amount' 
-                    ? (tradeAmount && currentPrice > 0 ? (parseFloat(tradeAmount) / currentPrice).toFixed(6) : "0.000000")
-                    : (lotSize || "0.000000")
-                  } {symbol?.toUpperCase()}
+                  {orderCalc.assetQuantity.toFixed(6)} {symbol?.toUpperCase()}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Leverage:</span>
-                <span className="font-semibold">{leverage}x</span>
+                <span className="font-semibold">{orderCalc.lev}x</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Margin Required:</span>
-                <span className="font-semibold">
-                  ${inputMode === 'amount'
-                    ? (tradeAmount ? (parseFloat(tradeAmount) / leverage).toFixed(2) : "0.00")
-                    : (lotSize && currentPrice > 0 ? ((parseFloat(lotSize) * currentPrice) / leverage).toFixed(2) : "0.00")
-                  }
-                </span>
+                <span className="font-semibold">${orderCalc.marginRequired.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm border-t border-border pt-2 mt-2">
                 <span className="text-muted-foreground">Position Value:</span>
                 <span className="font-semibold text-lg text-green-500">
-                  ${inputMode === 'amount'
-                    ? (tradeAmount ? parseFloat(tradeAmount).toFixed(2) : "0.00")
-                    : (lotSize && currentPrice > 0 ? (parseFloat(lotSize) * currentPrice).toFixed(2) : "0.00")
-                  }
+                  ${orderCalc.positionValue.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -1424,9 +1436,8 @@ const Trading = () => {
                 size="lg"
                 disabled={
                   (orderType === 'limit' && (!limitPrice || parseFloat(limitPrice) <= 0)) ||
-                  (inputMode === 'amount'
-                    ? (!tradeAmount || parseFloat(tradeAmount) <= 0 || (orderType === 'market' && parseFloat(tradeAmount) / leverage > walletBalance))
-                    : (!lotSize || parseFloat(lotSize) <= 0 || !currentPrice || currentPrice <= 0 || (orderType === 'market' && (parseFloat(lotSize) * currentPrice) / leverage > walletBalance)))
+                  orderCalc.positionValue <= 0 ||
+                  (orderType === 'market' && orderCalc.marginRequired > walletBalance)
                 }
               >
                 {orderType === 'limit' ? <ShoppingCart className="mr-2 h-5 w-5" /> : <TrendingUp className="mr-2 h-5 w-5" />}
@@ -1608,32 +1619,21 @@ const Trading = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Asset Quantity:</span>
                 <span className="font-semibold">
-                  {inputMode === 'amount' 
-                    ? (tradeAmount && currentPrice > 0 ? (parseFloat(tradeAmount) / currentPrice).toFixed(6) : "0.000000")
-                    : (lotSize || "0.000000")
-                  } {symbol?.toUpperCase()}
+                  {orderCalc.assetQuantity.toFixed(6)} {symbol?.toUpperCase()}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Leverage:</span>
-                <span className="font-semibold">{leverage}x</span>
+                <span className="font-semibold">{orderCalc.lev}x</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Margin Required:</span>
-                <span className="font-semibold">
-                  ${inputMode === 'amount'
-                    ? (tradeAmount ? (parseFloat(tradeAmount) / leverage).toFixed(2) : "0.00")
-                    : (lotSize && currentPrice > 0 ? ((parseFloat(lotSize) * currentPrice) / leverage).toFixed(2) : "0.00")
-                  }
-                </span>
+                <span className="font-semibold">${orderCalc.marginRequired.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm border-t border-border pt-2 mt-2">
                 <span className="text-muted-foreground">Position Value:</span>
                 <span className="font-semibold text-lg text-red-500">
-                  ${inputMode === 'amount'
-                    ? (tradeAmount ? parseFloat(tradeAmount).toFixed(2) : "0.00")
-                    : (lotSize && currentPrice > 0 ? (parseFloat(lotSize) * currentPrice).toFixed(2) : "0.00")
-                  }
+                  ${orderCalc.positionValue.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -1644,9 +1644,8 @@ const Trading = () => {
                 size="lg"
                 disabled={
                   (orderType === 'limit' && (!limitPrice || parseFloat(limitPrice) <= 0)) ||
-                  (inputMode === 'amount'
-                    ? (!tradeAmount || parseFloat(tradeAmount) <= 0 || (orderType === 'market' && parseFloat(tradeAmount) / leverage > walletBalance))
-                    : (!lotSize || parseFloat(lotSize) <= 0 || !currentPrice || currentPrice <= 0 || (orderType === 'market' && (parseFloat(lotSize) * currentPrice) / leverage > walletBalance)))
+                  orderCalc.positionValue <= 0 ||
+                  (orderType === 'market' && orderCalc.marginRequired > walletBalance)
                 }
               >
                 {orderType === 'limit' ? <ShoppingCart className="mr-2 h-5 w-5" /> : <TrendingDown className="mr-2 h-5 w-5" />}
@@ -1670,12 +1669,7 @@ const Trading = () => {
             </DialogDescription>
           </DialogHeader>
           {pendingOrder && (() => {
-            const isLimit = orderType === 'limit';
-            const execPrice = isLimit ? parseFloat(limitPrice || '0') : currentPrice;
-            const positionValue = inputMode === 'amount'
-              ? parseFloat(tradeAmount || '0')
-              : parseFloat(lotSize || '0') * (execPrice || currentPrice);
-            const units = execPrice > 0 ? positionValue / execPrice : 0;
+            const { isLimit, execPrice, positionValue, assetQuantity, marginRequired, lev } = orderCalc;
             const sl = parseFloat(stopLoss || '0');
             const tp = parseFloat(takeProfit || '0');
             return (
@@ -1683,10 +1677,11 @@ const Trading = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Symbol</span><span className="font-semibold">{symbol?.toUpperCase()}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Side</span><span className={`font-semibold ${pendingOrder === 'long' ? 'text-green-500' : 'text-red-500'}`}>{pendingOrder === 'long' ? 'BUY' : 'SELL'}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Order Type</span><span className="font-semibold uppercase">{orderType}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Leverage</span><span className="font-semibold">{leverage}x</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Leverage</span><span className="font-semibold">{lev}x</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">{isLimit ? 'Limit Price' : 'Market Price'}</span><span className="font-semibold">${execPrice.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-semibold">${positionValue.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Units</span><span className="font-semibold">{units.toFixed(6)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Position Value</span><span className="font-semibold">${positionValue.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Units</span><span className="font-semibold">{assetQuantity.toFixed(6)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Margin Required</span><span className="font-semibold">${marginRequired.toFixed(2)}</span></div>
                 <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Stop Loss</span><span className="font-semibold">{sl > 0 ? `$${sl.toFixed(2)}` : '—'}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Take Profit</span><span className="font-semibold">{tp > 0 ? `$${tp.toFixed(2)}` : '—'}</span></div>
               </div>
