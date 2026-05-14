@@ -506,6 +506,75 @@ function TradingChart({
         dbg
       </button>
 
+      {/* Settings toggle */}
+      <button
+        type="button"
+        onClick={() => setSettingsOpen((v) => !v)}
+        title="Chart animation settings"
+        className={`absolute right-2 top-[5.25rem] z-20 rounded-md border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider backdrop-blur-md transition-colors ${
+          settingsOpen
+            ? "border-primary/60 bg-primary/15 text-primary"
+            : "border-border/40 bg-background/60 text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        ⚙ anim
+      </button>
+
+      {settingsOpen && (
+        <div className="absolute right-2 top-[7.5rem] z-30 w-[220px] rounded-lg border border-border/60 bg-background/95 p-3 text-[11px] shadow-lg backdrop-blur-md">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-semibold uppercase tracking-wider text-muted-foreground">Animation</span>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(false)}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+
+          <label className="mb-2 flex items-center justify-between gap-2">
+            <span>Close-price tween</span>
+            <input
+              type="checkbox"
+              checked={tweenEnabled}
+              onChange={(e) => setTweenEnabled(e.target.checked)}
+              className="h-3.5 w-3.5 accent-primary"
+            />
+          </label>
+
+          <div className={`space-y-1 ${tweenEnabled ? "" : "opacity-50"}`}>
+            <div className="flex items-center justify-between">
+              <span>Speed</span>
+              <span className="font-mono text-muted-foreground">{tweenMs}ms</span>
+            </div>
+            <input
+              type="range"
+              min={20}
+              max={600}
+              step={10}
+              value={tweenMs}
+              disabled={!tweenEnabled}
+              onChange={(e) => setTweenMs(parseInt(e.target.value, 10))}
+              className="w-full accent-primary"
+            />
+            <div className="flex justify-between text-[9px] text-muted-foreground">
+              <span>fast</span>
+              <span>smooth</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { setTweenEnabled(true); setTweenMs(140); }}
+            className="mt-2 w-full rounded border border-border/60 px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+          >
+            Reset to default
+          </button>
+        </div>
+      )}
+
       {/* Debug overlay panel */}
       {debug && last && (
         <div className="pointer-events-none absolute bottom-2 left-2 z-20 max-w-[260px] rounded-lg border border-border/60 bg-background/85 p-2 font-mono text-[10px] leading-tight backdrop-blur-md shadow-sm">
