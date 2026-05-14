@@ -254,7 +254,7 @@ function TradingChart({
         if (!target) return;
 
         const tw = tweenStateRef.current;
-        const TWEEN_MS = 140;
+        const TWEEN_MS = Math.max(1, tweenMsRef.current || 1);
         let renderClose = target.close;
         let stillTweening = false;
         if (tw) {
