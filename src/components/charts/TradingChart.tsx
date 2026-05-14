@@ -38,6 +38,8 @@ export interface Candle {
 
 export type ChartType = "candles" | "heikin" | "line" | "area" | "bars";
 
+const CHART_ANIMATION_SETTINGS_VERSION = "fast-v2";
+
 interface Props {
   symbol: string;
   candles: Candle[];
@@ -79,6 +81,12 @@ function TradingChart({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tweenEnabled, setTweenEnabled] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
+    if (localStorage.getItem("tradingChartAnimVersion") !== CHART_ANIMATION_SETTINGS_VERSION) {
+      localStorage.setItem("tradingChartAnimVersion", CHART_ANIMATION_SETTINGS_VERSION);
+      localStorage.setItem("tradingChartTweenEnabled", "0");
+      localStorage.setItem("tradingChartTweenMs", "35");
+      return false;
+    }
     const v = localStorage.getItem("tradingChartTweenEnabled");
     return v === null ? false : v === "1";
   });
