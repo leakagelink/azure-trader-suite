@@ -111,10 +111,19 @@ function buildPollingStream(
       // Tell the browser to retry quickly on disconnect
       safeEnqueue("retry: 1500\n\n");
 
+      // De-dupe identical prices but force an emit every FORCE_EMIT_MS
+      // so the client always knows the stream is alive and the candle
+      // ticks consistently even when upstream is flat.
+      let lastPrice: number | null = null;
+      let lastEmitAt = 0;
       const tick = async () => {
         const p = await fetchPrice();
         if (p == null) return;
-        safeEnqueue(`data: ${JSON.stringify({ price: p, ts: Date.now() })}\n\n`);
+        const now = Date.now();
+        if (p === lastPrice && now - lastEmitAt < FORCE_EMIT_MS) return;
+        lastPrice = p;
+        lastEmitAt = now;
+        safeEnqueue(`data: ${JSON.stringify({ price: p, ts: now })}\n\n`);
       };
 
       // Heartbeat keeps the connection from being killed by intermediaries
