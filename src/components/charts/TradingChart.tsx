@@ -66,6 +66,13 @@ function TradingChart({
   const [volSeries, setVolSeries] = useState<ISeriesApi<"Histogram"> | null>(null);
   const indSeriesRef = useRef<ISeriesApi<any>[]>([]);
   const alertLinesRef = useRef<IPriceLine[]>([]);
+  const disposedRef = useRef(false);
+  // Animation/throttling refs for smooth live tick rendering
+  const prevCandlesRef = useRef<Candle[] | null>(null);
+  const prevChartTypeRef = useRef<ChartType | null>(null);
+  const pendingCandleRef = useRef<Candle | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const tweenStateRef = useRef<{ from: number; to: number; t0: number } | null>(null);
   const { drawings, setDrawings } = useChartDrawings(symbol);
 
   // create chart once
