@@ -38,6 +38,8 @@ export interface Candle {
 
 export type ChartType = "candles" | "heikin" | "line" | "area" | "bars";
 
+const CHART_ANIMATION_SETTINGS_VERSION = "fast-v2";
+
 interface Props {
   symbol: string;
   candles: Candle[];
@@ -78,14 +80,20 @@ function TradingChart({
   // ----- Animation settings (persisted) -----
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tweenEnabled, setTweenEnabled] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
+    if (typeof window === "undefined") return false;
+    if (localStorage.getItem("tradingChartAnimVersion") !== CHART_ANIMATION_SETTINGS_VERSION) {
+      localStorage.setItem("tradingChartAnimVersion", CHART_ANIMATION_SETTINGS_VERSION);
+      localStorage.setItem("tradingChartTweenEnabled", "0");
+      localStorage.setItem("tradingChartTweenMs", "35");
+      return false;
+    }
     const v = localStorage.getItem("tradingChartTweenEnabled");
-    return v === null ? true : v === "1";
+    return v === null ? false : v === "1";
   });
   const [tweenMs, setTweenMs] = useState<number>(() => {
-    if (typeof window === "undefined") return 140;
+    if (typeof window === "undefined") return 35;
     const v = parseInt(localStorage.getItem("tradingChartTweenMs") || "", 10);
-    return Number.isFinite(v) && v >= 0 && v <= 1000 ? v : 140;
+    return Number.isFinite(v) && v >= 0 && v <= 80 ? v : 35;
   });
   const tweenEnabledRef = useRef(tweenEnabled);
   const tweenMsRef = useRef(tweenMs);
@@ -101,7 +109,13 @@ function TradingChart({
   // create chart once
   useEffect(() => {
     if (!containerRef.current) return;
+    disposedRef.current = false;
+    const container = containerRef.current;
+    const initialWidth = Math.max(1, container.clientWidth);
+    const initialHeight = Math.max(1, container.clientHeight);
     const c = createChart(containerRef.current, {
+      width: initialWidth,
+      height: initialHeight,
       layout: {
         background: { color: "#0B0F1A" },
         textColor: "#cbd5e1",
@@ -114,8 +128,15 @@ function TradingChart({
       rightPriceScale: { borderColor: "rgba(255,255,255,0.08)" },
       timeScale: { borderColor: "rgba(255,255,255,0.08)", timeVisible: true, secondsVisible: false },
       crosshair: { mode: 1 },
-      autoSize: true,
     });
+    let localDisposed = false;
+    const ro = new ResizeObserver(([entry]) => {
+      if (localDisposed || disposedRef.current) return;
+      const width = Math.max(1, Math.floor(entry.contentRect.width));
+      const height = Math.max(1, Math.floor(entry.contentRect.height));
+      try { c.resize(width, height); } catch {}
+    });
+    ro.observe(container);
     const vs = c.addSeries(HistogramSeries, {
       priceFormat: { type: "volume" },
       priceScaleId: "",
@@ -125,6 +146,8 @@ function TradingChart({
     setChart(c);
     setVolSeries(vs);
     return () => {
+      localDisposed = true;
+      ro.disconnect();
       disposedRef.current = true;
       if (rafRef.current != null) {
         cancelAnimationFrame(rafRef.current);
@@ -254,7 +277,7 @@ function TradingChart({
         if (!target) return;
 
         const tw = tweenStateRef.current;
-        const TWEEN_MS = Math.max(1, tweenMsRef.current || 1);
+        const TWEEN_MS = Math.max(1, Math.min(80, tweenMsRef.current || 1));
         let renderClose = target.close;
         let stillTweening = false;
         if (tw) {
@@ -676,9 +699,9 @@ function TradingChart({
             </div>
             <input
               type="range"
-              min={20}
-              max={600}
-              step={10}
+              min={0}
+              max={80}
+              step={5}
               value={tweenMs}
               disabled={!tweenEnabled}
               onChange={(e) => setTweenMs(parseInt(e.target.value, 10))}
@@ -692,7 +715,7 @@ function TradingChart({
 
           <button
             type="button"
-            onClick={() => { setTweenEnabled(true); setTweenMs(140); }}
+            onClick={() => { setTweenEnabled(true); setTweenMs(35); }}
             className="mt-2 w-full rounded border border-border/60 px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted/40 hover:text-foreground"
           >
             Reset to default
