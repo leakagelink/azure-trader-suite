@@ -410,15 +410,41 @@ function TradingChart({
   debugStatsRef.current = debugStats;
   const lastSeenRef = useRef<{ time: number; close: number } | null>(null);
 
+  // ----- Perf overlay: live FPS + chart update latency -----
+  const [perf, setPerf] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("tradingChartPerf") === "1";
+  });
+  const [perfStats, setPerfStats] = useState({
+    fps: 0,
+    avgFrameMs: 0,
+    worstFrameMs: 0,
+    avgLatencyMs: 0,
+    lastLatencyMs: 0,
+    updatesPerSec: 0,
+  });
+  const tickTimesRef = useRef<number[]>([]);
+  const tickLatenciesRef = useRef<number[]>([]);
+
   // Count ticks/bar transitions whenever candles update.
   useEffect(() => {
     if (!candles.length) return;
     const lc = candles[candles.length - 1];
     const seen = lastSeenRef.current;
     const now = Date.now();
+    const nowPerf = performance.now();
     const isNewBar = !seen || lc.time !== seen.time;
     const isTick = !seen || lc.close !== seen.close || isNewBar;
     if (!isTick) return;
+    tickTimesRef.current.push(nowPerf);
+    if (tickTimesRef.current.length > 1) {
+      const a = tickTimesRef.current[tickTimesRef.current.length - 2];
+      const b = tickTimesRef.current[tickTimesRef.current.length - 1];
+      tickLatenciesRef.current.push(b - a);
+      if (tickLatenciesRef.current.length > 60) tickLatenciesRef.current.shift();
+    }
+    if (tickTimesRef.current.length > 120) tickTimesRef.current.shift();
+
     lastSeenRef.current = { time: lc.time, close: lc.close };
     setDebugStats((s) => ({
       tickCount: s.tickCount + 1,
@@ -437,6 +463,57 @@ function TradingChart({
     }, 250);
     return () => clearInterval(id);
   }, [debug]);
+
+  // FPS sampler — runs only when perf overlay is on so it costs ~nothing otherwise.
+  useEffect(() => {
+    if (!perf) return;
+    let raf = 0;
+    let last = performance.now();
+    let frames = 0;
+    let frameAcc = 0;
+    let worst = 0;
+    let lastSample = last;
+    const loop = (t: number) => {
+      const dt = t - last;
+      last = t;
+      frames += 1;
+      frameAcc += dt;
+      if (dt > worst) worst = dt;
+      if (t - lastSample >= 500) {
+        const span = (t - lastSample) / 1000;
+        const fps = frames / span;
+        const avgFrameMs = frameAcc / frames;
+        const lats = tickLatenciesRef.current;
+        const avgLat = lats.length ? lats.reduce((a, b) => a + b, 0) / lats.length : 0;
+        const lastLat = lats.length ? lats[lats.length - 1] : 0;
+        const cutoff = t - 1000;
+        const ups = tickTimesRef.current.filter((x) => x >= cutoff).length;
+        setPerfStats({
+          fps: Math.round(fps),
+          avgFrameMs: Math.round(avgFrameMs * 10) / 10,
+          worstFrameMs: Math.round(worst * 10) / 10,
+          avgLatencyMs: Math.round(avgLat),
+          lastLatencyMs: Math.round(lastLat),
+          updatesPerSec: ups,
+        });
+        frames = 0;
+        frameAcc = 0;
+        worst = 0;
+        lastSample = t;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [perf]);
+
+  const togglePerf = () => {
+    setPerf((v) => {
+      const next = !v;
+      try { localStorage.setItem("tradingChartPerf", next ? "1" : "0"); } catch {}
+      return next;
+    });
+  };
 
   const toggleDebug = () => {
     setDebug((v) => {
