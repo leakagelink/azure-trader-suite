@@ -223,7 +223,13 @@ function TradingChart({
         indSeriesRef.current.push(hs);
       }
     }
-    chart.timeScale().fitContent();
+    // Keep the same fixed window after indicator changes
+    try {
+      const VISIBLE_BARS = 80;
+      const len = candles.length;
+      const from = Math.max(0, len - VISIBLE_BARS);
+      chart.timeScale().setVisibleLogicalRange({ from, to: len - 1 });
+    } catch {}
   }, [chart, candles, indicators]);
 
   // Alert price lines
