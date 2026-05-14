@@ -10,27 +10,47 @@ interface Options {
   interval: string;
   enabled: boolean;
   onCandle: (c: Candle, isFinal: boolean) => void;
+  onTrade?: (price: number, ts: number) => void;
 }
 
 /**
  * Subscribes to Binance kline websocket and emits live candle updates.
  * Only enabled for crypto symbols. Auto-reconnects on disconnect.
  */
-export function useBinanceKlineStream({ symbol, interval, enabled, onCandle }: Options) {
+export function useBinanceKlineStream({ symbol, interval, enabled, onCandle, onTrade }: Options) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<number | null>(null);
+  const tradeRafRef = useRef<number | null>(null);
+  const pendingTradeRef = useRef<{ price: number; ts: number } | null>(null);
   const cbRef = useRef(onCandle);
+  const tradeCbRef = useRef(onTrade);
 
   useEffect(() => {
     cbRef.current = onCandle;
   }, [onCandle]);
 
   useEffect(() => {
+    tradeCbRef.current = onTrade;
+  }, [onTrade]);
+
+  useEffect(() => {
     if (!enabled || !symbol || !BINANCE_INTERVALS.has(interval)) return;
 
     let closed = false;
     const pair = `${symbol.toUpperCase()}USDT`.toLowerCase();
-    const url = `wss://stream.binance.com:9443/ws/${pair}@kline_${interval}`;
+    const url = `wss://stream.binance.com:9443/stream?streams=${pair}@kline_${interval}/${pair}@aggTrade`;
+
+    const emitTrade = (price: number, ts: number) => {
+      if (!tradeCbRef.current || !Number.isFinite(price) || price <= 0) return;
+      pendingTradeRef.current = { price, ts };
+      if (tradeRafRef.current != null) return;
+      tradeRafRef.current = window.requestAnimationFrame(() => {
+        tradeRafRef.current = null;
+        const tick = pendingTradeRef.current;
+        pendingTradeRef.current = null;
+        if (!closed && tick) tradeCbRef.current?.(tick.price, tick.ts);
+      });
+    };
 
     const connect = () => {
       if (closed) return;
@@ -40,7 +60,12 @@ export function useBinanceKlineStream({ symbol, interval, enabled, onCandle }: O
       ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-          const k = msg.k;
+          const data = msg.data ?? msg;
+          if (data.e === "aggTrade" || data.stream?.includes("@aggTrade")) {
+            emitTrade(parseFloat(data.p), Number(data.T ?? data.E ?? Date.now()));
+            return;
+          }
+          const k = data.k;
           if (!k) return;
           const candle: Candle = {
             time: Math.floor(k.t / 1000),
@@ -70,6 +95,9 @@ export function useBinanceKlineStream({ symbol, interval, enabled, onCandle }: O
     return () => {
       closed = true;
       if (reconnectRef.current) window.clearTimeout(reconnectRef.current);
+      if (tradeRafRef.current != null) window.cancelAnimationFrame(tradeRafRef.current);
+      tradeRafRef.current = null;
+      pendingTradeRef.current = null;
       try { wsRef.current?.close(); } catch {}
       wsRef.current = null;
     };
