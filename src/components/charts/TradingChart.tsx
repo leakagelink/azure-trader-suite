@@ -269,7 +269,7 @@ function TradingChart({
         if (!target) return;
 
         const tw = tweenStateRef.current;
-        const TWEEN_MS = Math.max(1, tweenMsRef.current || 1);
+        const TWEEN_MS = Math.max(1, Math.min(80, tweenMsRef.current || 1));
         let renderClose = target.close;
         let stillTweening = false;
         if (tw) {
@@ -691,9 +691,9 @@ function TradingChart({
             </div>
             <input
               type="range"
-              min={20}
-              max={600}
-              step={10}
+              min={0}
+              max={80}
+              step={5}
               value={tweenMs}
               disabled={!tweenEnabled}
               onChange={(e) => setTweenMs(parseInt(e.target.value, 10))}
@@ -707,7 +707,7 @@ function TradingChart({
 
           <button
             type="button"
-            onClick={() => { setTweenEnabled(true); setTweenMs(140); }}
+            onClick={() => { setTweenEnabled(true); setTweenMs(35); }}
             className="mt-2 w-full rounded border border-border/60 px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted/40 hover:text-foreground"
           >
             Reset to default
