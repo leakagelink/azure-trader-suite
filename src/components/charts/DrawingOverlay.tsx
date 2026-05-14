@@ -310,15 +310,15 @@ export default function DrawingOverlay({
         }
       }
 
-      // magnet crosshair tag
-      if (active) raf = requestAnimationFrame(render);
+      const shouldKeepRendering = mode !== "cursor" || drawings.length > 0 || selectedId != null;
+      if (active && shouldKeepRendering) raf = requestAnimationFrame(render);
     };
     raf = requestAnimationFrame(render);
     return () => {
       active = false;
       cancelAnimationFrame(raf);
     };
-  }, [chart, series, drawings, containerRef, selectedId]);
+  }, [chart, series, drawings, containerRef, selectedId, mode]);
 
   // pointer events
   useEffect(() => {
