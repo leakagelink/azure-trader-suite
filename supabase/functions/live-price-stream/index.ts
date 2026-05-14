@@ -25,7 +25,9 @@ const corsHeaders = {
 };
 
 const STREAM_MAX_MS = 110_000; // < 2 min so clients reconnect cleanly
-const TICK_MS = 1_500;
+const TICK_MS = 800; // Yahoo poll cadence (forex/commodities)
+const FORCE_EMIT_MS = 4_000; // emit at least this often even if price didn't change
+const BINANCE_MIN_EMIT_MS = 120; // upper bound on Binance trade emits (~8/s)
 
 // ----------------------------------------------------------------- symbol maps
 const COMMODITY_TO_YAHOO: Record<string, string> = {
@@ -109,10 +111,19 @@ function buildPollingStream(
       // Tell the browser to retry quickly on disconnect
       safeEnqueue("retry: 1500\n\n");
 
+      // De-dupe identical prices but force an emit every FORCE_EMIT_MS
+      // so the client always knows the stream is alive and the candle
+      // ticks consistently even when upstream is flat.
+      let lastPrice: number | null = null;
+      let lastEmitAt = 0;
       const tick = async () => {
         const p = await fetchPrice();
         if (p == null) return;
-        safeEnqueue(`data: ${JSON.stringify({ price: p, ts: Date.now() })}\n\n`);
+        const now = Date.now();
+        if (p === lastPrice && now - lastEmitAt < FORCE_EMIT_MS) return;
+        lastPrice = p;
+        lastEmitAt = now;
+        safeEnqueue(`data: ${JSON.stringify({ price: p, ts: now })}\n\n`);
       };
 
       // Heartbeat keeps the connection from being killed by intermediaries
@@ -161,6 +172,22 @@ function buildBinanceStream(symbol: string): ReadableStream<Uint8Array> {
       };
       safeEnqueue("retry: 1500\n\n");
 
+      // Coalesce Binance trade ticks to a steady ~8/sec cadence —
+      // always emit the latest seen price in the throttle window so
+      // movement is preserved without flooding SSE / client renderer.
+      let pendingPrice: number | null = null;
+      let lastEmitAt = 0;
+      let flushTimer: number | null = null;
+
+      const flushPending = () => {
+        flushTimer = null;
+        if (closed || pendingPrice == null) return;
+        const now = Date.now();
+        safeEnqueue(`data: ${JSON.stringify({ price: pendingPrice, ts: now })}\n\n`);
+        lastEmitAt = now;
+        pendingPrice = null;
+      };
+
       try {
         ws = new WebSocket(url);
         ws.onmessage = (ev) => {
@@ -168,7 +195,13 @@ function buildBinanceStream(symbol: string): ReadableStream<Uint8Array> {
             const m = JSON.parse(ev.data);
             const p = parseFloat(m.p);
             if (!isFinite(p) || p <= 0) return;
-            safeEnqueue(`data: ${JSON.stringify({ price: p, ts: Date.now() })}\n\n`);
+            pendingPrice = p;
+            const sinceLast = Date.now() - lastEmitAt;
+            if (sinceLast >= BINANCE_MIN_EMIT_MS) {
+              flushPending();
+            } else if (flushTimer == null) {
+              flushTimer = setTimeout(flushPending, BINANCE_MIN_EMIT_MS - sinceLast) as unknown as number;
+            }
           } catch {}
         };
         ws.onerror = () => { /* noop, will be retried by client */ };
@@ -178,6 +211,7 @@ function buildBinanceStream(symbol: string): ReadableStream<Uint8Array> {
       const stopId = setTimeout(() => {
         closed = true;
         clearInterval(hbId);
+        if (flushTimer != null) clearTimeout(flushTimer);
         try { ws?.close(); } catch {}
         try { controller.close(); } catch {}
       }, STREAM_MAX_MS);
@@ -186,6 +220,7 @@ function buildBinanceStream(symbol: string): ReadableStream<Uint8Array> {
         closed = true;
         clearInterval(hbId);
         clearTimeout(stopId);
+        if (flushTimer != null) clearTimeout(flushTimer);
         try { ws?.close(); } catch {}
         try { controller.close(); } catch {}
       };
