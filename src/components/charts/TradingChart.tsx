@@ -102,13 +102,22 @@ function TradingChart({
     setChart(c);
     setVolSeries(vs);
     return () => {
-      c.remove();
+      disposedRef.current = true;
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      try { c.remove(); } catch {}
       setChart(null);
       setMainSeries(null);
       mainSeriesRef.current = null;
       setVolSeries(null);
       indSeriesRef.current = [];
       alertLinesRef.current = [];
+      prevCandlesRef.current = null;
+      prevChartTypeRef.current = null;
+      pendingCandleRef.current = null;
+      tweenStateRef.current = null;
     };
   }, []);
 
