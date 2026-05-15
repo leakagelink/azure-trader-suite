@@ -565,6 +565,29 @@ export const AdminTradeManagement = () => {
     }
   };
 
+  const handleDeleteClosedTrade = async (positionId: string) => {
+    if (!window.confirm("Delete this trade from history? This cannot be undone.")) return;
+    const { error } = await supabase.rpc("admin_delete_position", { p_position_id: positionId });
+    if (error) {
+      toast.error(`Delete failed: ${error.message}`);
+      return;
+    }
+    setClosedPositions(prev => prev.filter(p => p.id !== positionId));
+    toast.success("Trade deleted from history");
+  };
+
+  const handleClearTradeHistory = async () => {
+    if (!viewingUserId) return;
+    if (!window.confirm("Clear ALL closed trades for this user? This cannot be undone.")) return;
+    const { data, error } = await supabase.rpc("admin_clear_user_trade_history", { p_user_id: viewingUserId });
+    if (error) {
+      toast.error(`Clear failed: ${error.message}`);
+      return;
+    }
+    setClosedPositions([]);
+    toast.success(`Deleted ${data ?? 0} trade(s) from history`);
+  };
+
   const getEffectivePositionAmount = (position: Pick<Position, 'amount' | 'margin' | 'leverage' | 'entry_price'>) => {
     const rawAmount = Number(position.amount) || 0;
     const margin = Number(position.margin) || 0;
