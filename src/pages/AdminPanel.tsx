@@ -780,7 +780,7 @@ const AdminPanel = () => {
         { setting_key: "account_number", setting_value: paymentSettings.accountNumber },
         { setting_key: "ifsc_code", setting_value: paymentSettings.ifsc },
         { setting_key: "bank_name", setting_value: paymentSettings.bankName },
-        { setting_key: "exchange_rate", setting_value: paymentSettings.exchangeRate },
+        { setting_key: "exchange_rate", setting_value: (1 / parseFloat(paymentSettings.exchangeRate || "96")).toFixed(8) },
         { setting_key: "app_download_url", setting_value: paymentSettings.appDownloadUrl },
         { setting_key: "max_leverage", setting_value: paymentSettings.maxLeverage || "100" },
         // Deposit offer settings
