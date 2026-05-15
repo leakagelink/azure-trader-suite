@@ -1601,6 +1601,17 @@ export const AdminTradeManagement = () => {
                 <p className="text-muted-foreground text-center py-8">No closed trades</p>
               ) : (
                 <>
+                  <div className="flex justify-end mb-3">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleClearTradeHistory}
+                      className="gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Clear All History
+                    </Button>
+                  </div>
                   <div className="overflow-x-auto -mx-2 px-2"><Table>
                     <TableHeader>
                       <TableRow>
@@ -1612,6 +1623,7 @@ export const AdminTradeManagement = () => {
                         <TableHead>Leverage</TableHead>
                         <TableHead>Final PnL</TableHead>
                         <TableHead>Closed At</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
