@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, Edit, X, ArrowUp, ArrowDown, Plus, Minus, Search, ChevronLeft, ChevronRight, Users, Eye, History, Coins, RotateCcw, Lock, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, Edit, X, ArrowUp, ArrowDown, Plus, Minus, Search, ChevronLeft, ChevronRight, Users, Eye, History, Coins, RotateCcw, Lock, AlertTriangle, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -563,6 +563,29 @@ export const AdminTradeManagement = () => {
       
       setClosedPositions(positionsWithProfiles as any);
     }
+  };
+
+  const handleDeleteClosedTrade = async (positionId: string) => {
+    if (!window.confirm("Delete this trade from history? This cannot be undone.")) return;
+    const { error } = await supabase.rpc("admin_delete_position", { p_position_id: positionId });
+    if (error) {
+      toast.error(`Delete failed: ${error.message}`);
+      return;
+    }
+    setClosedPositions(prev => prev.filter(p => p.id !== positionId));
+    toast.success("Trade deleted from history");
+  };
+
+  const handleClearTradeHistory = async () => {
+    if (!viewingUserId) return;
+    if (!window.confirm("Clear ALL closed trades for this user? This cannot be undone.")) return;
+    const { data, error } = await supabase.rpc("admin_clear_user_trade_history", { p_user_id: viewingUserId });
+    if (error) {
+      toast.error(`Clear failed: ${error.message}`);
+      return;
+    }
+    setClosedPositions([]);
+    toast.success(`Deleted ${data ?? 0} trade(s) from history`);
   };
 
   const getEffectivePositionAmount = (position: Pick<Position, 'amount' | 'margin' | 'leverage' | 'entry_price'>) => {
@@ -1578,6 +1601,17 @@ export const AdminTradeManagement = () => {
                 <p className="text-muted-foreground text-center py-8">No closed trades</p>
               ) : (
                 <>
+                  <div className="flex justify-end mb-3">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleClearTradeHistory}
+                      className="gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Clear All History
+                    </Button>
+                  </div>
                   <div className="overflow-x-auto -mx-2 px-2"><Table>
                     <TableHeader>
                       <TableRow>
@@ -1589,6 +1623,7 @@ export const AdminTradeManagement = () => {
                         <TableHead>Leverage</TableHead>
                         <TableHead>Final PnL</TableHead>
                         <TableHead>Closed At</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1647,6 +1682,17 @@ export const AdminTradeManagement = () => {
                                   </>
                                 )}
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClosedTrade(position.id)}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                title="Delete trade"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         );
