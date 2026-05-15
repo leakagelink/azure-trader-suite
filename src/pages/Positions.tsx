@@ -961,6 +961,8 @@ const Positions = () => {
 
       if (reason === 'stop_loss') {
         toast.warning(`⚠️ Stop Loss triggered for ${position.symbol}! Position closed at $${closePrice.toFixed(2)}. PnL: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`);
+      } else if (reason === 'liquidation') {
+        toast.error(`💥 ${position.symbol} liquidated at $${closePrice.toFixed(2)} — loss reached 100% of margin. PnL: $${pnl.toFixed(2)}`);
       } else {
         toast.success(`🎯 Take Profit reached for ${position.symbol}! Position closed at $${closePrice.toFixed(2)}. PnL: +$${pnl.toFixed(2)}`);
       }
