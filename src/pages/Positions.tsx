@@ -258,7 +258,7 @@ const Positions = () => {
           });
         }
 
-        const autoCloseQueue: Array<{ position: Position; reason: "stop_loss" | "take_profit" }> = [];
+        const autoCloseQueue: Array<{ position: Position; reason: "stop_loss" | "take_profit" | "liquidation" }> = [];
 
         const updatedPositions = currentPositions.map((position) => {
           let currentPrice = position.current_price;
