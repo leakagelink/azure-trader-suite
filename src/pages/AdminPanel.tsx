@@ -47,6 +47,7 @@ import { AdminKYCManagement } from "@/components/AdminKYCManagement";
 import { AdminSignalsManagement } from "@/components/AdminSignalsManagement";
 import { AdminAuditLog } from "@/components/AdminAuditLog";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import AdminUserPaymentMethodsDialog from "@/components/AdminUserPaymentMethodsDialog";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const AdminPanel = () => {
@@ -91,6 +92,8 @@ const AdminPanel = () => {
 
   // Withdrawals state
   const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
+  const [methodsDialogOpen, setMethodsDialogOpen] = useState(false);
+  const [methodsDialogUser, setMethodsDialogUser] = useState<{ id: string; name: string } | null>(null);
 
   // KYC state (count only — list managed inside AdminKYCManagement)
   const [pendingKycCount, setPendingKycCount] = useState(0);
@@ -1554,32 +1557,48 @@ const AdminPanel = () => {
                             <div className="text-xs">{new Date(request.created_at).toLocaleTimeString()}</div>
                           </TableCell>
                           <TableCell>
-                            {request.status === "pending" && (
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedWithdrawal(request);
-                                    setApproveWithdrawalOpen(true);
-                                  }}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    setSelectedWithdrawal(request);
-                                    setRejectWithdrawalOpen(true);
-                                  }}
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setMethodsDialogUser({
+                                    id: request.user_id,
+                                    name: request.profiles?.full_name || request.profiles?.email || "User",
+                                  });
+                                  setMethodsDialogOpen(true);
+                                }}
+                              >
+                                <Wallet className="h-4 w-4 mr-1" />
+                                Saved Methods
+                              </Button>
+                              {request.status === "pending" && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedWithdrawal(request);
+                                      setApproveWithdrawalOpen(true);
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => {
+                                      setSelectedWithdrawal(request);
+                                      setRejectWithdrawalOpen(true);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -2472,6 +2491,13 @@ const AdminPanel = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AdminUserPaymentMethodsDialog
+        open={methodsDialogOpen}
+        onOpenChange={setMethodsDialogOpen}
+        userId={methodsDialogUser?.id || null}
+        userName={methodsDialogUser?.name || null}
+      />
             </Tabs>
           </main>
         </div>
