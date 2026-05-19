@@ -1461,27 +1461,38 @@ const AdminPanel = () => {
                             <div className="text-xs">{new Date(request.created_at).toLocaleTimeString()}</div>
                           </TableCell>
                           <TableCell>
-                            {(request.status === "pending" || request.status === "locked") && (
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleApproveDeposit(request.id)}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  {request.status === "locked" ? "Verify & Approve" : "Approve"}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleRejectDeposit(request.id)}
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex gap-2 flex-wrap">
+                              {(request.status === "pending" || request.status === "locked") && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleApproveDeposit(request.id)}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    {request.status === "locked" ? "Verify & Approve" : "Approve"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleRejectDeposit(request.id)}
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteDeposit(request.id)}
+                                title="Delete record"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
+
                         </TableRow>
                       ))}
                     </TableBody>
