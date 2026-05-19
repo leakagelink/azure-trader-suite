@@ -101,8 +101,9 @@ const Wallet = () => {
       })) || []);
 
       const { data: deposits, error: depositsError } = await supabase
-        .from("deposit_requests").select("*").eq("user_id", user.id)
+        .from("deposit_requests").select("*").eq("user_id", user.id).is("deleted_at", null)
         .order("created_at", { ascending: false }).limit(10);
+
       if (depositsError) throw depositsError;
       setDepositHistory(deposits || []);
     } catch (error: any) {

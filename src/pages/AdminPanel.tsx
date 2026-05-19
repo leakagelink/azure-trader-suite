@@ -89,9 +89,12 @@ const AdminPanel = () => {
 
   // Deposits state
   const [depositRequests, setDepositRequests] = useState<any[]>([]);
+  const [showDeletedDeposits, setShowDeletedDeposits] = useState(false);
 
   // Withdrawals state
   const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
+  const [showDeletedWithdrawals, setShowDeletedWithdrawals] = useState(false);
+
   const [methodsDialogOpen, setMethodsDialogOpen] = useState(false);
   const [methodsDialogUser, setMethodsDialogUser] = useState<{ id: string; name: string } | null>(null);
 
@@ -544,11 +547,29 @@ const AdminPanel = () => {
   };
 
   const handleDeleteDeposit = async (depositId: string) => {
-    if (!window.confirm("Delete this deposit record permanently? This cannot be undone.")) return;
+    if (!window.confirm("Move this deposit record to trash? It will be hidden from the active list but can be restored.")) return;
     try {
-      const { error } = await supabase.from("deposit_requests").delete().eq("id", depositId);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("deposit_requests")
+        .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
+        .eq("id", depositId);
       if (error) throw error;
-      toast({ title: "Deleted", description: "Deposit record removed" });
+      toast({ title: "Moved to trash", description: "Deposit record archived (recoverable)" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleRestoreDeposit = async (depositId: string) => {
+    try {
+      const { error } = await supabase
+        .from("deposit_requests")
+        .update({ deleted_at: null, deleted_by: null })
+        .eq("id", depositId);
+      if (error) throw error;
+      toast({ title: "Restored", description: "Deposit record restored" });
       fetchAllData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -556,16 +577,35 @@ const AdminPanel = () => {
   };
 
   const handleDeleteWithdrawal = async (withdrawalId: string) => {
-    if (!window.confirm("Delete this withdrawal record permanently? This cannot be undone.")) return;
+    if (!window.confirm("Move this withdrawal record to trash? It will be hidden from the active list but can be restored.")) return;
     try {
-      const { error } = await supabase.from("withdrawal_requests").delete().eq("id", withdrawalId);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("withdrawal_requests")
+        .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
+        .eq("id", withdrawalId);
       if (error) throw error;
-      toast({ title: "Deleted", description: "Withdrawal record removed" });
+      toast({ title: "Moved to trash", description: "Withdrawal record archived (recoverable)" });
       fetchAllData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
+
+  const handleRestoreWithdrawal = async (withdrawalId: string) => {
+    try {
+      const { error } = await supabase
+        .from("withdrawal_requests")
+        .update({ deleted_at: null, deleted_by: null })
+        .eq("id", withdrawalId);
+      if (error) throw error;
+      toast({ title: "Restored", description: "Withdrawal record restored" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
 
 
   const handleApproveWithdrawal = async () => {
@@ -922,9 +962,16 @@ const AdminPanel = () => {
     );
   }
 
-  // Compute pending counts for sidebar badges
-  const pendingDepositsCount = depositRequests.filter((d: any) => d.status === "pending" || d.status === "locked").length;
-  const pendingWithdrawalsCount = withdrawalRequests.filter((w: any) => w.status === "pending").length;
+  // Compute pending counts for sidebar badges (exclude trashed records)
+  const pendingDepositsCount = depositRequests.filter((d: any) => !d.deleted_at && (d.status === "pending" || d.status === "locked")).length;
+  const pendingWithdrawalsCount = withdrawalRequests.filter((w: any) => !w.deleted_at && w.status === "pending").length;
+
+  // Filter lists based on "show deleted" toggle
+  const visibleDeposits = depositRequests.filter((d: any) => showDeletedDeposits ? !!d.deleted_at : !d.deleted_at);
+  const visibleWithdrawals = withdrawalRequests.filter((w: any) => showDeletedWithdrawals ? !!w.deleted_at : !w.deleted_at);
+  const trashedDepositsCount = depositRequests.filter((d: any) => !!d.deleted_at).length;
+  const trashedWithdrawalsCount = withdrawalRequests.filter((w: any) => !!w.deleted_at).length;
+
 
   return (
     <SidebarProvider defaultOpen={typeof window !== "undefined" ? window.innerWidth >= 1024 : true}>
@@ -1375,24 +1422,40 @@ const AdminPanel = () => {
           <TabsContent value="deposits">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Wallet className="h-5 w-5" />
                       Deposit Management
                     </CardTitle>
-                    <CardDescription>Review and approve deposit requests</CardDescription>
+                    <CardDescription>
+                      {showDeletedDeposits
+                        ? `Viewing trashed deposits (${trashedDepositsCount})`
+                        : "Review and approve deposit requests"}
+                    </CardDescription>
                   </div>
-                  <Button onClick={fetchAllData} variant="outline" size="icon">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={showDeletedDeposits ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowDeletedDeposits(v => !v)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      {showDeletedDeposits ? "View Active" : `Trash (${trashedDepositsCount})`}
+                    </Button>
+                    <Button onClick={fetchAllData} variant="outline" size="icon">
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <p className="text-center py-8 text-muted-foreground">Loading deposits...</p>
-                ) : depositRequests.length === 0 ? (
-                  <p className="text-center py-8 text-muted-foreground">No deposit requests</p>
+                ) : visibleDeposits.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">
+                    {showDeletedDeposits ? "Trash is empty" : "No deposit requests"}
+                  </p>
                 ) : (
                   <div className="overflow-x-auto -mx-2 px-2"><Table>
                     <TableHeader>
@@ -1407,10 +1470,11 @@ const AdminPanel = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {depositRequests.map((request) => (
-                        <TableRow key={request.id}>
+                      {visibleDeposits.map((request) => (
+                        <TableRow key={request.id} className={request.deleted_at ? "opacity-70" : ""}>
                           <TableCell>
                             <div>
+
                               <div className="font-medium">
                                 {request.profiles?.full_name || "Unknown"}
                               </div>
@@ -1462,7 +1526,7 @@ const AdminPanel = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2 flex-wrap">
-                              {(request.status === "pending" || request.status === "locked") && (
+                              {!request.deleted_at && (request.status === "pending" || request.status === "locked") && (
                                 <>
                                   <Button
                                     size="sm"
@@ -1482,16 +1546,29 @@ const AdminPanel = () => {
                                   </Button>
                                 </>
                               )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteDeposit(request.id)}
-                                title="Delete record"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {request.deleted_at ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRestoreDeposit(request.id)}
+                                  title="Restore record"
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-1" />
+                                  Restore
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteDeposit(request.id)}
+                                  title="Move to trash"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
+
 
                         </TableRow>
                       ))}
@@ -1506,24 +1583,40 @@ const AdminPanel = () => {
           <TabsContent value="withdrawals">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <ArrowUpRight className="h-5 w-5" />
                       Withdrawal Management
                     </CardTitle>
-                    <CardDescription>Review and approve withdrawal requests</CardDescription>
+                    <CardDescription>
+                      {showDeletedWithdrawals
+                        ? `Viewing trashed withdrawals (${trashedWithdrawalsCount})`
+                        : "Review and approve withdrawal requests"}
+                    </CardDescription>
                   </div>
-                  <Button onClick={fetchAllData} variant="outline" size="icon">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={showDeletedWithdrawals ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowDeletedWithdrawals(v => !v)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      {showDeletedWithdrawals ? "View Active" : `Trash (${trashedWithdrawalsCount})`}
+                    </Button>
+                    <Button onClick={fetchAllData} variant="outline" size="icon">
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <p className="text-center py-8 text-muted-foreground">Loading withdrawals...</p>
-                ) : withdrawalRequests.length === 0 ? (
-                  <p className="text-center py-8 text-muted-foreground">No withdrawal requests</p>
+                ) : visibleWithdrawals.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">
+                    {showDeletedWithdrawals ? "Trash is empty" : "No withdrawal requests"}
+                  </p>
                 ) : (
                   <div className="overflow-x-auto -mx-2 px-2"><Table>
                     <TableHeader>
@@ -1538,9 +1631,10 @@ const AdminPanel = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {withdrawalRequests.map((request) => (
-                        <TableRow key={request.id}>
+                      {visibleWithdrawals.map((request) => (
+                        <TableRow key={request.id} className={request.deleted_at ? "opacity-70" : ""}>
                           <TableCell>
+
                             <div>
                               <div className="font-medium">
                                 {request.profiles?.full_name || "Unknown"}
@@ -1608,7 +1702,7 @@ const AdminPanel = () => {
                                 <Wallet className="h-4 w-4 mr-1" />
                                 Saved Methods
                               </Button>
-                              {request.status === "pending" && (
+                              {!request.deleted_at && request.status === "pending" && (
                                 <div className="flex gap-2">
                                   <Button
                                     size="sm"
@@ -1634,15 +1728,28 @@ const AdminPanel = () => {
                                   </Button>
                                 </div>
                               )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteWithdrawal(request.id)}
-                                title="Delete record"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
+                              {request.deleted_at ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRestoreWithdrawal(request.id)}
+                                  title="Restore record"
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-1" />
+                                  Restore
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteWithdrawal(request.id)}
+                                  title="Move to trash"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
+                              )}
+
 
                             </div>
                           </TableCell>
