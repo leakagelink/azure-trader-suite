@@ -60,6 +60,8 @@ export type Database = {
           approved_by: string | null
           created_at: string
           currency: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_proof_url: string | null
@@ -74,6 +76,8 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           currency?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_proof_url?: string | null
@@ -88,6 +92,8 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           currency?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_proof_url?: string | null
@@ -670,6 +676,8 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           processed_at: string | null
           processed_by: string | null
@@ -685,6 +693,8 @@ export type Database = {
           amount: number
           created_at?: string
           currency?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           processed_at?: string | null
           processed_by?: string | null
@@ -700,6 +710,8 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           processed_at?: string | null
           processed_by?: string | null
