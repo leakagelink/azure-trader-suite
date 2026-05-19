@@ -98,6 +98,9 @@ const AdminPanel = () => {
   const [showDeletedWithdrawals, setShowDeletedWithdrawals] = useState(false);
 
   const [methodsDialogOpen, setMethodsDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteDialogRecord, setDeleteDialogRecord] = useState<import("@/components/DeleteConfirmDialog").DeleteRecord | null>(null);
+
   const [methodsDialogUser, setMethodsDialogUser] = useState<{ id: string; name: string } | null>(null);
   const [auditLogOpen, setAuditLogOpen] = useState(false);
   const [auditLogFilter, setAuditLogFilter] = useState<string | undefined>(undefined);
