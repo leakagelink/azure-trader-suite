@@ -581,30 +581,76 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDeleteDeposit = async (depositId: string) => {
-    const reason = window.prompt("Reason for deleting this deposit record? (required for audit log)");
-    if (reason === null) return;
-    if (!reason.trim()) {
-      toast({ title: "Reason required", description: "Please provide a reason for the audit log", variant: "destructive" });
-      return;
-    }
+  // Open the rich confirm dialog for deposit deletion
+  const handleDeleteDeposit = (depositId: string) => {
+    const d = depositRequests.find(x => x.id === depositId);
+    if (!d) return;
+    setDeleteDialogRecord({
+      type: "deposit",
+      id: depositId,
+      userName: d.profiles?.full_name,
+      userEmail: d.profiles?.email,
+      amount: d.amount,
+      currency: d.currency,
+      status: d.status,
+      method: d.payment_method,
+      reference: d.transaction_id,
+      createdAt: d.created_at,
+    });
+    setDeleteDialogOpen(true);
+  };
+
+  // Open the rich confirm dialog for withdrawal deletion
+  const handleDeleteWithdrawal = (withdrawalId: string) => {
+    const w = withdrawalRequests.find(x => x.id === withdrawalId);
+    if (!w) return;
+    const acc = w.account_details || {};
+    setDeleteDialogRecord({
+      type: "withdrawal",
+      id: withdrawalId,
+      userName: w.profiles?.full_name,
+      userEmail: w.profiles?.email,
+      amount: w.amount,
+      currency: w.currency,
+      status: w.status,
+      method: w.withdrawal_method,
+      reference: w.transaction_reference,
+      createdAt: w.created_at,
+      extra: w.withdrawal_method === "bank"
+        ? { account: acc.accountName, "acc no": acc.accountNumber, ifsc: acc.ifscCode, bank: acc.bankName }
+        : { upi: acc.upiId },
+    });
+    setDeleteDialogOpen(true);
+  };
+
+  // Actual mutation invoked by the dialog after user confirms with a reason
+  const performDeleteConfirmed = async (reason: string) => {
+    if (!deleteDialogRecord) return;
+    const { type, id } = deleteDialogRecord;
+    const table = type === "deposit" ? "deposit_requests" : "withdrawal_requests";
     try {
-      const deposit = depositRequests.find(d => d.id === depositId);
+      const source: any = type === "deposit"
+        ? depositRequests.find(x => x.id === id)
+        : withdrawalRequests.find(x => x.id === id);
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase
-        .from("deposit_requests")
+        .from(table)
         .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
-        .eq("id", depositId);
+        .eq("id", id);
       if (error) throw error;
       await writeAuditLog({
         action: "soft_delete",
-        target_table: "deposit_requests",
-        target_id: depositId,
-        target_user_id: deposit?.user_id ?? null,
-        reason: reason.trim(),
-        metadata: { amount: deposit?.amount, currency: deposit?.currency, status: deposit?.status },
+        target_table: table,
+        target_id: id,
+        target_user_id: source?.user_id ?? null,
+        reason,
+        metadata: type === "deposit"
+          ? { amount: source?.amount, currency: source?.currency, status: source?.status }
+          : { amount: source?.amount, currency: source?.currency, status: source?.status, method: source?.withdrawal_method },
       });
-      toast({ title: "Moved to trash", description: "Deposit record archived (recoverable)" });
+      toast({ title: "Moved to trash", description: `${type === "deposit" ? "Deposit" : "Withdrawal"} archived (recoverable)` });
+      setDeleteDialogOpen(false);
+      setDeleteDialogRecord(null);
       fetchAllData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -612,7 +658,6 @@ const AdminPanel = () => {
   };
 
   const handleRestoreDeposit = async (depositId: string) => {
-    const reason = window.prompt("Reason for restoring this deposit record? (optional)") ?? "";
     try {
       const deposit = depositRequests.find(d => d.id === depositId);
       const { error } = await supabase
@@ -625,7 +670,7 @@ const AdminPanel = () => {
         target_table: "deposit_requests",
         target_id: depositId,
         target_user_id: deposit?.user_id ?? null,
-        reason: reason.trim() || null,
+        reason: null,
         metadata: { amount: deposit?.amount, currency: deposit?.currency },
       });
       toast({ title: "Restored", description: "Deposit record restored" });
@@ -635,38 +680,7 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDeleteWithdrawal = async (withdrawalId: string) => {
-    const reason = window.prompt("Reason for deleting this withdrawal record? (required for audit log)");
-    if (reason === null) return;
-    if (!reason.trim()) {
-      toast({ title: "Reason required", description: "Please provide a reason for the audit log", variant: "destructive" });
-      return;
-    }
-    try {
-      const w = withdrawalRequests.find(x => x.id === withdrawalId);
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from("withdrawal_requests")
-        .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
-        .eq("id", withdrawalId);
-      if (error) throw error;
-      await writeAuditLog({
-        action: "soft_delete",
-        target_table: "withdrawal_requests",
-        target_id: withdrawalId,
-        target_user_id: w?.user_id ?? null,
-        reason: reason.trim(),
-        metadata: { amount: w?.amount, currency: w?.currency, status: w?.status, method: w?.withdrawal_method },
-      });
-      toast({ title: "Moved to trash", description: "Withdrawal record archived (recoverable)" });
-      fetchAllData();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
   const handleRestoreWithdrawal = async (withdrawalId: string) => {
-    const reason = window.prompt("Reason for restoring this withdrawal record? (optional)") ?? "";
     try {
       const w = withdrawalRequests.find(x => x.id === withdrawalId);
       const { error } = await supabase
@@ -679,7 +693,7 @@ const AdminPanel = () => {
         target_table: "withdrawal_requests",
         target_id: withdrawalId,
         target_user_id: w?.user_id ?? null,
-        reason: reason.trim() || null,
+        reason: null,
         metadata: { amount: w?.amount, currency: w?.currency },
       });
       toast({ title: "Restored", description: "Withdrawal record restored" });
@@ -688,6 +702,7 @@ const AdminPanel = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
+
 
 
 
