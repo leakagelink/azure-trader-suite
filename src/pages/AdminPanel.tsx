@@ -546,15 +546,54 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDeleteDeposit = async (depositId: string) => {
-    if (!window.confirm("Move this deposit record to trash? It will be hidden from the active list but can be restored.")) return;
+  const writeAuditLog = async (entry: {
+    action: string;
+    target_table: string;
+    target_id: string;
+    target_user_id?: string | null;
+    reason?: string | null;
+    metadata?: Record<string, any> | null;
+  }) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("admin_audit_log").insert({
+        actor_id: user.id,
+        action: entry.action,
+        target_table: entry.target_table,
+        target_id: entry.target_id,
+        target_user_id: entry.target_user_id ?? null,
+        reason: entry.reason ?? null,
+        metadata: entry.metadata ?? null,
+      });
+    } catch (err) {
+      console.error("Failed to write audit log:", err);
+    }
+  };
+
+  const handleDeleteDeposit = async (depositId: string) => {
+    const reason = window.prompt("Reason for deleting this deposit record? (required for audit log)");
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast({ title: "Reason required", description: "Please provide a reason for the audit log", variant: "destructive" });
+      return;
+    }
+    try {
+      const deposit = depositRequests.find(d => d.id === depositId);
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase
         .from("deposit_requests")
         .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
         .eq("id", depositId);
       if (error) throw error;
+      await writeAuditLog({
+        action: "soft_delete",
+        target_table: "deposit_requests",
+        target_id: depositId,
+        target_user_id: deposit?.user_id ?? null,
+        reason: reason.trim(),
+        metadata: { amount: deposit?.amount, currency: deposit?.currency, status: deposit?.status },
+      });
       toast({ title: "Moved to trash", description: "Deposit record archived (recoverable)" });
       fetchAllData();
     } catch (error: any) {
@@ -563,12 +602,22 @@ const AdminPanel = () => {
   };
 
   const handleRestoreDeposit = async (depositId: string) => {
+    const reason = window.prompt("Reason for restoring this deposit record? (optional)") ?? "";
     try {
+      const deposit = depositRequests.find(d => d.id === depositId);
       const { error } = await supabase
         .from("deposit_requests")
         .update({ deleted_at: null, deleted_by: null })
         .eq("id", depositId);
       if (error) throw error;
+      await writeAuditLog({
+        action: "restore",
+        target_table: "deposit_requests",
+        target_id: depositId,
+        target_user_id: deposit?.user_id ?? null,
+        reason: reason.trim() || null,
+        metadata: { amount: deposit?.amount, currency: deposit?.currency },
+      });
       toast({ title: "Restored", description: "Deposit record restored" });
       fetchAllData();
     } catch (error: any) {
@@ -577,14 +626,28 @@ const AdminPanel = () => {
   };
 
   const handleDeleteWithdrawal = async (withdrawalId: string) => {
-    if (!window.confirm("Move this withdrawal record to trash? It will be hidden from the active list but can be restored.")) return;
+    const reason = window.prompt("Reason for deleting this withdrawal record? (required for audit log)");
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast({ title: "Reason required", description: "Please provide a reason for the audit log", variant: "destructive" });
+      return;
+    }
     try {
+      const w = withdrawalRequests.find(x => x.id === withdrawalId);
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase
         .from("withdrawal_requests")
         .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
         .eq("id", withdrawalId);
       if (error) throw error;
+      await writeAuditLog({
+        action: "soft_delete",
+        target_table: "withdrawal_requests",
+        target_id: withdrawalId,
+        target_user_id: w?.user_id ?? null,
+        reason: reason.trim(),
+        metadata: { amount: w?.amount, currency: w?.currency, status: w?.status, method: w?.withdrawal_method },
+      });
       toast({ title: "Moved to trash", description: "Withdrawal record archived (recoverable)" });
       fetchAllData();
     } catch (error: any) {
@@ -593,18 +656,29 @@ const AdminPanel = () => {
   };
 
   const handleRestoreWithdrawal = async (withdrawalId: string) => {
+    const reason = window.prompt("Reason for restoring this withdrawal record? (optional)") ?? "";
     try {
+      const w = withdrawalRequests.find(x => x.id === withdrawalId);
       const { error } = await supabase
         .from("withdrawal_requests")
         .update({ deleted_at: null, deleted_by: null })
         .eq("id", withdrawalId);
       if (error) throw error;
+      await writeAuditLog({
+        action: "restore",
+        target_table: "withdrawal_requests",
+        target_id: withdrawalId,
+        target_user_id: w?.user_id ?? null,
+        reason: reason.trim() || null,
+        metadata: { amount: w?.amount, currency: w?.currency },
+      });
       toast({ title: "Restored", description: "Withdrawal record restored" });
       fetchAllData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
+
 
 
 
