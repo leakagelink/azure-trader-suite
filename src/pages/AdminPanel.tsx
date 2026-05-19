@@ -1634,6 +1634,16 @@ const AdminPanel = () => {
                                   </Button>
                                 </div>
                               )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteWithdrawal(request.id)}
+                                title="Delete record"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+
                             </div>
                           </TableCell>
                         </TableRow>
