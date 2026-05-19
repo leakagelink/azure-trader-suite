@@ -1583,24 +1583,40 @@ const AdminPanel = () => {
           <TabsContent value="withdrawals">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <ArrowUpRight className="h-5 w-5" />
                       Withdrawal Management
                     </CardTitle>
-                    <CardDescription>Review and approve withdrawal requests</CardDescription>
+                    <CardDescription>
+                      {showDeletedWithdrawals
+                        ? `Viewing trashed withdrawals (${trashedWithdrawalsCount})`
+                        : "Review and approve withdrawal requests"}
+                    </CardDescription>
                   </div>
-                  <Button onClick={fetchAllData} variant="outline" size="icon">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={showDeletedWithdrawals ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowDeletedWithdrawals(v => !v)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      {showDeletedWithdrawals ? "View Active" : `Trash (${trashedWithdrawalsCount})`}
+                    </Button>
+                    <Button onClick={fetchAllData} variant="outline" size="icon">
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <p className="text-center py-8 text-muted-foreground">Loading withdrawals...</p>
-                ) : withdrawalRequests.length === 0 ? (
-                  <p className="text-center py-8 text-muted-foreground">No withdrawal requests</p>
+                ) : visibleWithdrawals.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">
+                    {showDeletedWithdrawals ? "Trash is empty" : "No withdrawal requests"}
+                  </p>
                 ) : (
                   <div className="overflow-x-auto -mx-2 px-2"><Table>
                     <TableHeader>
@@ -1615,9 +1631,10 @@ const AdminPanel = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {withdrawalRequests.map((request) => (
-                        <TableRow key={request.id}>
+                      {visibleWithdrawals.map((request) => (
+                        <TableRow key={request.id} className={request.deleted_at ? "opacity-70" : ""}>
                           <TableCell>
+
                             <div>
                               <div className="font-medium">
                                 {request.profiles?.full_name || "Unknown"}
