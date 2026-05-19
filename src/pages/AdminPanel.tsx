@@ -543,6 +543,31 @@ const AdminPanel = () => {
     }
   };
 
+  const handleDeleteDeposit = async (depositId: string) => {
+    if (!window.confirm("Delete this deposit record permanently? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase.from("deposit_requests").delete().eq("id", depositId);
+      if (error) throw error;
+      toast({ title: "Deleted", description: "Deposit record removed" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteWithdrawal = async (withdrawalId: string) => {
+    if (!window.confirm("Delete this withdrawal record permanently? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase.from("withdrawal_requests").delete().eq("id", withdrawalId);
+      if (error) throw error;
+      toast({ title: "Deleted", description: "Withdrawal record removed" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+
   const handleApproveWithdrawal = async () => {
     if (!selectedWithdrawal) return;
 
