@@ -2219,7 +2219,7 @@ const AdminPanel = () => {
                     Change Login Password
                   </Button>
                 </div>
-                )}
+
 
                 <Button onClick={handleSavePaymentSettings} className="w-full">
                   Save All Settings
