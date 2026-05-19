@@ -547,11 +547,29 @@ const AdminPanel = () => {
   };
 
   const handleDeleteDeposit = async (depositId: string) => {
-    if (!window.confirm("Delete this deposit record permanently? This cannot be undone.")) return;
+    if (!window.confirm("Move this deposit record to trash? It will be hidden from the active list but can be restored.")) return;
     try {
-      const { error } = await supabase.from("deposit_requests").delete().eq("id", depositId);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("deposit_requests")
+        .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
+        .eq("id", depositId);
       if (error) throw error;
-      toast({ title: "Deleted", description: "Deposit record removed" });
+      toast({ title: "Moved to trash", description: "Deposit record archived (recoverable)" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleRestoreDeposit = async (depositId: string) => {
+    try {
+      const { error } = await supabase
+        .from("deposit_requests")
+        .update({ deleted_at: null, deleted_by: null })
+        .eq("id", depositId);
+      if (error) throw error;
+      toast({ title: "Restored", description: "Deposit record restored" });
       fetchAllData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -559,16 +577,35 @@ const AdminPanel = () => {
   };
 
   const handleDeleteWithdrawal = async (withdrawalId: string) => {
-    if (!window.confirm("Delete this withdrawal record permanently? This cannot be undone.")) return;
+    if (!window.confirm("Move this withdrawal record to trash? It will be hidden from the active list but can be restored.")) return;
     try {
-      const { error } = await supabase.from("withdrawal_requests").delete().eq("id", withdrawalId);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("withdrawal_requests")
+        .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
+        .eq("id", withdrawalId);
       if (error) throw error;
-      toast({ title: "Deleted", description: "Withdrawal record removed" });
+      toast({ title: "Moved to trash", description: "Withdrawal record archived (recoverable)" });
       fetchAllData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
+
+  const handleRestoreWithdrawal = async (withdrawalId: string) => {
+    try {
+      const { error } = await supabase
+        .from("withdrawal_requests")
+        .update({ deleted_at: null, deleted_by: null })
+        .eq("id", withdrawalId);
+      if (error) throw error;
+      toast({ title: "Restored", description: "Withdrawal record restored" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
 
 
   const handleApproveWithdrawal = async () => {
