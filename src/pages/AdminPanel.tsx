@@ -2775,6 +2775,14 @@ const AdminPanel = () => {
         filterTable={auditLogFilter}
       />
 
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={(v) => { setDeleteDialogOpen(v); if (!v) setDeleteDialogRecord(null); }}
+        record={deleteDialogRecord}
+        onConfirm={performDeleteConfirmed}
+      />
+
+
             </Tabs>
           </main>
         </div>
