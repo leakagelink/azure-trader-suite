@@ -1702,7 +1702,7 @@ const AdminPanel = () => {
                                 <Wallet className="h-4 w-4 mr-1" />
                                 Saved Methods
                               </Button>
-                              {request.status === "pending" && (
+                              {!request.deleted_at && request.status === "pending" && (
                                 <div className="flex gap-2">
                                   <Button
                                     size="sm"
@@ -1728,15 +1728,28 @@ const AdminPanel = () => {
                                   </Button>
                                 </div>
                               )}
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteWithdrawal(request.id)}
-                                title="Delete record"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
+                              {request.deleted_at ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRestoreWithdrawal(request.id)}
+                                  title="Restore record"
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-1" />
+                                  Restore
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteWithdrawal(request.id)}
+                                  title="Move to trash"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
+                              )}
+
 
                             </div>
                           </TableCell>
