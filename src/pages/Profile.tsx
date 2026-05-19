@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import PageShell, { glassCardClass } from "@/components/PageShell";
+import PaymentMethodsManager from "@/components/PaymentMethodsManager";
 
 interface Profile {
   id: string;
