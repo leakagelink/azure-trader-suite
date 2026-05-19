@@ -47,6 +47,7 @@ import { AdminKYCManagement } from "@/components/AdminKYCManagement";
 import { AdminSignalsManagement } from "@/components/AdminSignalsManagement";
 import { AdminAuditLog } from "@/components/AdminAuditLog";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import AdminUserPaymentMethodsDialog from "@/components/AdminUserPaymentMethodsDialog";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const AdminPanel = () => {
