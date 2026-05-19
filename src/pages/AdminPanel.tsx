@@ -543,6 +543,31 @@ const AdminPanel = () => {
     }
   };
 
+  const handleDeleteDeposit = async (depositId: string) => {
+    if (!window.confirm("Delete this deposit record permanently? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase.from("deposit_requests").delete().eq("id", depositId);
+      if (error) throw error;
+      toast({ title: "Deleted", description: "Deposit record removed" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteWithdrawal = async (withdrawalId: string) => {
+    if (!window.confirm("Delete this withdrawal record permanently? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase.from("withdrawal_requests").delete().eq("id", withdrawalId);
+      if (error) throw error;
+      toast({ title: "Deleted", description: "Withdrawal record removed" });
+      fetchAllData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+
   const handleApproveWithdrawal = async () => {
     if (!selectedWithdrawal) return;
 
@@ -1436,27 +1461,38 @@ const AdminPanel = () => {
                             <div className="text-xs">{new Date(request.created_at).toLocaleTimeString()}</div>
                           </TableCell>
                           <TableCell>
-                            {(request.status === "pending" || request.status === "locked") && (
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleApproveDeposit(request.id)}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  <Check className="h-4 w-4 mr-1" />
-                                  {request.status === "locked" ? "Verify & Approve" : "Approve"}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleRejectDeposit(request.id)}
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex gap-2 flex-wrap">
+                              {(request.status === "pending" || request.status === "locked") && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleApproveDeposit(request.id)}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    <Check className="h-4 w-4 mr-1" />
+                                    {request.status === "locked" ? "Verify & Approve" : "Approve"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleRejectDeposit(request.id)}
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteDeposit(request.id)}
+                                title="Delete record"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
+
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1598,6 +1634,16 @@ const AdminPanel = () => {
                                   </Button>
                                 </div>
                               )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteWithdrawal(request.id)}
+                                title="Delete record"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+
                             </div>
                           </TableCell>
                         </TableRow>
