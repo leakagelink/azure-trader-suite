@@ -2748,6 +2748,13 @@ const AdminPanel = () => {
         userId={methodsDialogUser?.id || null}
         userName={methodsDialogUser?.name || null}
       />
+
+      <AdminAuditLogDialog
+        open={auditLogOpen}
+        onOpenChange={setAuditLogOpen}
+        filterTable={auditLogFilter}
+      />
+
             </Tabs>
           </main>
         </div>
