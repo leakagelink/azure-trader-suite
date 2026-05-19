@@ -1513,7 +1513,15 @@ const AdminPanel = () => {
                         : "Review and approve deposit requests"}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setAuditLogFilter("deposit_requests"); setAuditLogOpen(true); }}
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      Audit Log
+                    </Button>
                     <Button
                       variant={showDeletedDeposits ? "default" : "outline"}
                       size="sm"
@@ -1526,6 +1534,7 @@ const AdminPanel = () => {
                       <RefreshCw className="h-4 w-4" />
                     </Button>
                   </div>
+
                 </div>
               </CardHeader>
               <CardContent>
