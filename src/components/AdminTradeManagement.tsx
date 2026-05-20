@@ -1162,6 +1162,7 @@ export const AdminTradeManagement = () => {
 
       toast.success(`Position closed: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} PnL`);
       fetchPositions();
+      fetchClosedUserStats();
     } catch (error: any) {
       toast.error(error.message);
     }
