@@ -450,6 +450,59 @@ const Positions = () => {
     return () => clearInterval(intervalId);
   }, [user, hasOpenPositions]);
 
+  // Fast MT5-style tick momentum for LIVE trades (visual only, no DB write)
+  // Applies small random jitter (~1 point) every 350ms so prices visibly tick.
+  useEffect(() => {
+    if (!user || !hasOpenPositions) return;
+
+    const tick = () => {
+      const today = new Date().getDay();
+      const isWeekend = today === 0 || today === 6;
+      const { forexMomentumEnabled, commoditiesMomentumEnabled } = marketMomentumSettingsRef.current;
+
+      setOpenPositions((prev) => {
+        let mutated = false;
+        const next = prev.map((position) => {
+          if (position.status !== "open") return position;
+          if (position.price_mode === "edited" || position.price_mode === "manual") return position;
+          const symbol = position.symbol.toUpperCase();
+          const isForex = isForexSymbol(symbol);
+          const isCommodity = isCommoditySymbol(symbol);
+          if ((isForex && (isWeekend || !forexMomentumEnabled)) ||
+              (isCommodity && (isWeekend || !commoditiesMomentumEnabled))) {
+            return position;
+          }
+          const base = Number(position.current_price) || 0;
+          if (base <= 0) return position;
+
+          // Jitter: ±0.015% around the API-anchored current price
+          const jitterPct = (Math.random() * 2 - 1) * 0.00015;
+          const newPrice = Math.max(0.0001, base * (1 + jitterPct));
+          const quantity = getEffectivePositionAmount(position);
+          const newPnl = position.position_type === "long"
+            ? (newPrice - position.entry_price) * quantity
+            : (position.entry_price - newPrice) * quantity;
+
+          const prevPrice = previousPricesRef.current[position.id];
+          if (prevPrice !== undefined && prevPrice !== newPrice) {
+            const direction = newPrice > prevPrice ? "up" : "down";
+            setPriceChanges((p) => ({ ...p, [position.id]: { direction, flash: true } }));
+            setTimeout(() => {
+              setPriceChanges((p) => ({ ...p, [position.id]: { ...p[position.id], flash: false } }));
+            }, PRICE_FLASH_DURATION_MS);
+          }
+          previousPricesRef.current[position.id] = newPrice;
+          mutated = true;
+          return { ...position, current_price: newPrice, pnl: newPnl };
+        });
+        return mutated ? next : prev;
+      });
+    };
+
+    const id = setInterval(tick, 350);
+    return () => clearInterval(id);
+  }, [user, hasOpenPositions]);
+
   // Subscribe to real-time updates for position changes (when admin edits a trade)
   useEffect(() => {
     if (!user) return;
