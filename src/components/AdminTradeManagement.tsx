@@ -1371,12 +1371,12 @@ export const AdminTradeManagement = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Users with Active Trades ({filteredUsers.length})
+            Users with Trades ({filteredUsers.length})
           </h3>
           
           {filteredUsers.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              {searchQuery ? "No users found matching your search" : "No active trades"}
+              {searchQuery ? "No users found matching your search" : "No trades yet"}
             </p>
           ) : (
             <div className="grid gap-3">
@@ -1392,13 +1392,17 @@ export const AdminTradeManagement = () => {
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <div className="text-2xl font-bold">{user.tradeCount}</div>
-                      <div className="text-xs text-muted-foreground">Trades</div>
+                      <div className="text-xs text-muted-foreground">Open</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-muted-foreground">{user.closedCount}</div>
+                      <div className="text-xs text-muted-foreground">Closed</div>
                     </div>
                     <div className="text-center min-w-[100px]">
                       <div className={`text-lg font-semibold ${user.totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {user.totalPnL >= 0 ? '+' : ''}${user.totalPnL.toFixed(2)}
                       </div>
-                      <div className="text-xs text-muted-foreground">Total PnL</div>
+                      <div className="text-xs text-muted-foreground">Open PnL</div>
                     </div>
                     <Button 
                       variant="outline" 
