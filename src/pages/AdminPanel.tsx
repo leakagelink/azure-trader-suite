@@ -1317,7 +1317,16 @@ const AdminPanel = () => {
                       <Users className="h-5 w-5" />
                       User Management
                     </CardTitle>
-                    <CardDescription>View and manage all registered users</CardDescription>
+                    <CardDescription className="flex items-center gap-2">
+                      View and manage all registered users
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                        </span>
+                        {onlineUserIds.size} online now
+                      </span>
+                    </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1 sm:w-64">
@@ -1382,6 +1391,7 @@ const AdminPanel = () => {
                         <Table>
                           <TableHeader>
                             <TableRow>
+                              <TableHead>Status</TableHead>
                               <TableHead>Name</TableHead>
                               <TableHead>Email</TableHead>
                               <TableHead>Mobile</TableHead>
@@ -1391,8 +1401,28 @@ const AdminPanel = () => {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {paginatedUsers.map((user) => (
+                            {paginatedUsers.map((user) => {
+                              const isOnline = onlineUserIds.has(user.id);
+                              return (
                               <TableRow key={user.id}>
+                                <TableCell>
+                                  <Badge
+                                    variant="outline"
+                                    className={
+                                      isOnline
+                                        ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400 gap-1.5"
+                                        : "border-muted-foreground/30 bg-muted text-muted-foreground gap-1.5"
+                                    }
+                                  >
+                                    <span
+                                      className={
+                                        "h-1.5 w-1.5 rounded-full " +
+                                        (isOnline ? "bg-green-500 animate-pulse" : "bg-muted-foreground/60")
+                                      }
+                                    />
+                                    {isOnline ? "Online" : "Offline"}
+                                  </Badge>
+                                </TableCell>
                                 <TableCell className="font-medium">
                                   {user.full_name || "N/A"}
                                 </TableCell>
