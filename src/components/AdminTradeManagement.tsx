@@ -1321,7 +1321,8 @@ export const AdminTradeManagement = () => {
   const handleViewUserTrades = (userId: string) => {
     setViewingUserId(userId);
     setCurrentPage(1);
-    setTradeViewTab('open');
+    const hasOpen = positions.some(p => p.user_id === userId);
+    setTradeViewTab(hasOpen ? 'open' : 'closed');
     fetchClosedPositions(userId);
   };
 
