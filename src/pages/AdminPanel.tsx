@@ -1485,7 +1485,7 @@ const AdminPanel = () => {
                                   </div>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                            );})}
                           </TableBody>
                         </Table>
                       </div>
