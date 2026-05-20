@@ -247,6 +247,7 @@ export const AdminTradeManagement = () => {
   useEffect(() => {
     fetchUsers();
     fetchPositions();
+    fetchClosedUserStats();
   }, []);
 
   // Fetch price when symbol changes for lot size calculations
