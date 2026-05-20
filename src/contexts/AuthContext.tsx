@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useTrackPresence } from '@/hooks/usePresence';
 
 interface AuthContextType {
   user: User | null;
@@ -71,6 +72,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Track this user's online presence globally for admin visibility
+  useTrackPresence(user?.id);
 
   const signOut = async () => {
     await supabase.auth.signOut();
