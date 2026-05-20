@@ -14,6 +14,7 @@ import logo from "@/assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOnlineUsers } from "@/hooks/usePresence";
 import {
   Table,
   TableBody,
